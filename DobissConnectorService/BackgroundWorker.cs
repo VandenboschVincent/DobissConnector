@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SlimMessageBus;
+using System.Reflection;
 
 namespace DobissConnectorService
 {
@@ -41,11 +42,14 @@ namespace DobissConnectorService
                 logger.LogDebug("Fetching data for module {Module} with type {Type}", module.Key, module.Value);
                 List<DobissGroupData> outputData = await dobissService.FetchOutputsData(module.Key, cancellationToken);
                 logger.LogDebug("Module {Module} found with data {@Data}", module.Key, outputData);
-                foreach(DobissGroupData groupData in outputData)
+                foreach(DobissGroupData light in outputData)
                 {
-                    logger.LogInformation("Found light {Light} with address {Address} and module {Module}:{ModuleId}", groupData.name, groupData.id, module.Value, module.Key);
-                    lightCacheService.Add(new Light(module.Key, groupData.id, module.Value, groupData.name));
-                    await publishBus.Publish(new LightConfigMessage(groupData.name, module.Key, groupData.id), $"{topicPath}{module.Key}x{groupData.id}/config", null, cancellationToken);
+                    logger.LogInformation("Found light {Light} with address {Address} and module {Module}:{ModuleId}", light.name, light.id, module.Value, module.Key);
+                    lightCacheService.Add(new Light(module.Key, light.id, module.Value, light.name));
+                    await publishBus.Publish(
+                        module.Value == ModuleType.DIMMER
+                            ? new DimLightConfigMessage(light.name, module.Key, light.id)
+                            : new LightConfigMessage(light.name, module.Key, light.id), $"{topicPath}{module.Key}x{light.id}/config", null, cancellationToken);
                 }
             }
         }
@@ -63,16 +67,18 @@ namespace DobissConnectorService
                         logger.LogWarning("No group data found for module {Module} with address {Address}", module.module, output.address);
                         continue;
                     }
-                    logger.LogDebug("Found light {Light} with data {Status}", light.Name, output.status);
-                    if (light.CurrentValue != output.status)
+                    int outputStatus = output.status == 1 ? 100 : output.status;
+                    logger.LogDebug("Found light {Light} with data {Status}", light.Name, outputStatus);
+                    if (light.CurrentValue != outputStatus)
                     {
-                        light.CurrentValue = output.status;
+                        light.CurrentValue = outputStatus;
                         lightCacheService.Update(light);
-                        logger.LogInformation("Light {Light} has changed to {Status}", light.Name, output.status);
+                        logger.LogInformation("Light {Light} has changed to {Status}", light.Name, outputStatus);
                     }
-                    if (output.status > 1 || output.status < 0)
-                        continue;
-                    await publishBus.Publish(new LightStateMessage(output.status == 1 ? "ON" : "OFF"), $"{topicPath}{module.module}x{light.Key}/state", null, cancellationToken);
+                    if (outputStatus == 0 || outputStatus == 100)
+                        await publishBus.Publish(new LightStateMessage(outputStatus == 100 ? "ON" : "OFF"), $"{topicPath}{module.module}x{light.Key}/state", null, cancellationToken);
+                    else
+                        await publishBus.Publish(new LightStateMessage(outputStatus.ToString()), $"{topicPath}{module.module}x{light.Key}/state", null, cancellationToken);
                 }
             }
         }

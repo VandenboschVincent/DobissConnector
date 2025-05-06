@@ -17,6 +17,18 @@ namespace DobissConnectorService.Consumers.Messages
         public string via_device { get; set; }
     }
 
+    public class DimLightConfigMessage : LightConfigMessage
+    {
+        public DimLightConfigMessage(string name, int module, int id) : base(name, module, id)
+        {
+            brightness = true;
+            brightness_scale = 100;
+            cmd_t = $"homeassistant/light/dim/{unique_id}";
+        }
+
+        public int brightness_scale { get; set; }
+    }
+
     public class LightConfigMessage
     {
         public LightConfigMessage(string name, int module, int id)

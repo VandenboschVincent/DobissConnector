@@ -19,9 +19,9 @@ namespace DobissConnectorService.Handlers
 
             command.NewState ??= light.CurrentValue switch
             {
-                1 => 0,
-                0 => 1,
-                _ => light.CurrentValue
+                100 => 0,
+                0 => 100,
+                _ => 0
             };
 
             if (light.CurrentValue != command.NewState)
@@ -40,7 +40,7 @@ namespace DobissConnectorService.Handlers
         {
             return state switch
             {
-                1 => "ON",
+                100 => "ON",
                 0 => "OFF",
                 _ => throw new ArgumentException($"Invalid state: {state}")
             };

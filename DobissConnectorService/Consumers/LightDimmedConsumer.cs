@@ -7,7 +7,7 @@ using SlimMessageBus;
 
 namespace DobissConnectorService.Consumers
 {
-    public class LightToggledConsumer(ILogger<LightToggledConsumer> logger, LightCacheService lightCacheService, IMediator mediator) : IConsumer<IConsumerContext<LightToggledMessage>>
+    public class LightDimmedConsumer(ILogger<LightDimmedConsumer> logger, LightCacheService lightCacheService, IMediator mediator) : IConsumer<IConsumerContext<LightToggledMessage>>
     {
         public async Task OnHandle(IConsumerContext<LightToggledMessage> message, CancellationToken cancellationToken)
         {
