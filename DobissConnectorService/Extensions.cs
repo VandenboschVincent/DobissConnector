@@ -10,8 +10,8 @@ namespace DobissConnectorService
     {
         public static MessageBusBuilder WithCustomProviderMqtt(this MessageBusBuilder mbb, Action<MqttMessageBusSettings> configure)
         {
-            if (mbb == null) throw new ArgumentNullException(nameof(mbb));
-            if (configure == null) throw new ArgumentNullException(nameof(configure));
+            ArgumentNullException.ThrowIfNull(mbb);
+            ArgumentNullException.ThrowIfNull(configure);
 
             var providerSettings = new MqttMessageBusSettings();
             configure(providerSettings);
@@ -32,6 +32,8 @@ namespace DobissConnectorService
 
         public static bool CheckTopic(string allowedTopic, string topic)
         {
+            if (string.Equals(allowedTopic, topic))
+                return true;
             var realTopicRegex = allowedTopic.Replace(@"/", @"\/").Replace("+", @"[a-zA-Z0-9 _.-]*").Replace("#", @"[a-zA-Z0-9 \/_#+.-]*");
             var regex = new Regex(realTopicRegex);
             return regex.IsMatch(topic);

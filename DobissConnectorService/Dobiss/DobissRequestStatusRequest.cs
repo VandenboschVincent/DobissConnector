@@ -1,25 +1,12 @@
 ﻿using DobissConnectorService.Dobiss.Models;
 using DobissConnectorService.Dobiss.Utils;
-using static DobissConnectorService.Dobiss.DobissSendActionRequest;
-using System.Reflection.Emit;
 
 namespace DobissConnectorService.Dobiss
 {
-    public class DobissRequestStatusRequest : IDobissRequest<List<DobissOutput>>
+    public class DobissRequestStatusRequest(DobissClient dobissClient, ModuleType type, int module, int? outputs) : IDobissRequest<List<DobissOutput>>
     {
-        private const int MAX_OUTPUTS_PER_MODULE = 8;
+        private readonly int MAX_OUTPUTS_PER_MODULE = outputs ?? 12;
         private const byte EMPTY_BYTE = 0xFF;
-
-        private readonly DobissClient dobissClient;
-        private readonly ModuleType type;
-        private readonly int module;
-
-        public DobissRequestStatusRequest(DobissClient dobissClient, ModuleType type, int module)
-        {
-            this.dobissClient = dobissClient;
-            this.type = type;
-            this.module = module;
-        }
 
         public byte[] GetRequestBytes()
         {
@@ -51,14 +38,7 @@ namespace DobissConnectorService.Dobiss
 
         public async Task<List<DobissOutput>> Execute(CancellationToken cancellationToken)
         {
-            byte[] result = await dobissClient.SendRequest(this, cancellationToken);
-            if (result == null || result.Length == 0)
-            {
-                return [];
-            }
-
-            Array.Resize(ref result, MAX_OUTPUTS_PER_MODULE);
-
+            byte[] result = await ExecuteInternal(cancellationToken);
             var resultList = new List<DobissOutput>();
             for (int i = 0; i < result.Length; i++)
             {
@@ -73,15 +53,20 @@ namespace DobissConnectorService.Dobiss
 
         public async Task<string> ExecuteHex(CancellationToken cancellationToken)
         {
+            byte[] result = await ExecuteInternal(cancellationToken);
+            return ConversionUtils.BytesToHex(ConversionUtils.TrimBytes(result, EMPTY_BYTE));
+        }
+
+        private async Task<byte[]> ExecuteInternal(CancellationToken cancellationToken)
+        {
             byte[] result = await dobissClient.SendRequest(this, cancellationToken);
             if (result == null || result.Length == 0)
             {
-                return string.Empty;
+                return [];
             }
 
             Array.Resize(ref result, MAX_OUTPUTS_PER_MODULE);
-
-            return ConversionUtils.BytesToHex(ConversionUtils.TrimBytes(result, EMPTY_BYTE));
+            return result;
         }
     }
 }

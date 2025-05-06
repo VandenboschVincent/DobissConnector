@@ -3,18 +3,9 @@ using DobissConnectorService.Dobiss;
 
 namespace DobissConnectorService.Services
 {
-    public class DobissService
+    public class DobissService(DobissClient dobissClient, Dictionary<int, ModuleType> moduleTypeMap, LightCacheService lightCacheService)
     {
         private const int HEX_OUTPUT_STATUS_LENGTH = 2;
-
-        private readonly Dictionary<int, ModuleType> moduleTypeMap;
-        private readonly DobissClient dobissClient;
-
-        public DobissService(DobissClient dobissClient, Dictionary<int, ModuleType> moduleTypeMap)
-        {
-            this.dobissClient = dobissClient;
-            this.moduleTypeMap = moduleTypeMap;
-        }
 
         public async Task ToggleOutput(int module, int address, CancellationToken cancellationToken = default)
         {
@@ -31,11 +22,6 @@ namespace DobissConnectorService.Services
         public async Task<string> RequestModuleStatusAsHex(int module, CancellationToken cancellationToken = default)
         {
             return await RequestStatusHex(module, cancellationToken);
-        }
-
-        public async Task<List<DobissOutput>> RequestModuleStatusAsObject(int module, CancellationToken cancellationToken = default)
-        {
-            return await RequestStatus(module, cancellationToken);
         }
 
         public async Task<string> RequestOutputStatusAsHex(int module, int address, CancellationToken cancellationToken = default)
@@ -66,25 +52,22 @@ namespace DobissConnectorService.Services
         public async Task<List<DobissModule>> RequestAllStatus(CancellationToken cancellationToken = default)
         {
             var modules = new List<DobissModule>();
-            dobissClient.SetKeepConnectionOpen(true);
-
             foreach(var module in moduleTypeMap.Select(t => t.Key))
             {
-                var outputs = await RequestModuleStatusAsObject(module, cancellationToken);
+                var outputs = await RequestStatus(module, cancellationToken);
                 if (outputs.Count != 0)
                 {
                     modules.Add(new DobissModule(module, outputs));
                 }
             }
-            dobissClient.CloseConnection();
             return modules;
         }
 
-        private async Task<List<DobissOutput>> RequestStatus(int module, CancellationToken cancellationToken = default)
+        public async Task<List<DobissOutput>> RequestStatus(int module, CancellationToken cancellationToken = default)
         {
             if (moduleTypeMap.TryGetValue(module, out ModuleType knownType))
             {
-                return await new DobissRequestStatusRequest(dobissClient, knownType, module).Execute(cancellationToken);
+                return await new DobissRequestStatusRequest(dobissClient, knownType, module, lightCacheService.GetAll().Where(t => t.ModuleKey == module)?.Count()).Execute(cancellationToken);
             }
             return [];
         }
@@ -93,7 +76,7 @@ namespace DobissConnectorService.Services
         {
             if (moduleTypeMap.TryGetValue(module, out ModuleType knownType))
             {
-                return await new DobissRequestStatusRequest(dobissClient, knownType, module)
+                return await new DobissRequestStatusRequest(dobissClient, knownType, module, lightCacheService.GetAll().Where(t => t.ModuleKey == module)?.Count())
                     .ExecuteHex(cancellationToken);
             }
 

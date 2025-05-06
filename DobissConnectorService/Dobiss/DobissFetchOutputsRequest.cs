@@ -10,7 +10,7 @@ namespace DobissConnectorService.Dobiss
 
         private const int INDEX_TYPE = 2;
         private const int INDEX_MODULE = 3;
-        private static readonly char[] INVALID_CHAR = ['\u0001', '\0', '\u0002', '\uFFFD'];
+        private static readonly char[] INVALID_CHAR = ['\u0000', '\u0001', '\0', '\u0002', '\u0003', '\uFFFD'];
         private const int OUTPUT_NAME_LENGTH = 32;
 
         private readonly DobissClient dobissClient;
@@ -41,7 +41,8 @@ namespace DobissConnectorService.Dobiss
 
         public async Task<List<DobissGroupData>> Execute(CancellationToken cancellationToken)
         {
-            string groupsString = Encoding.UTF8.GetString(await this.dobissClient.SendRequest(this, cancellationToken));
+            var dataFound = await this.dobissClient.SendRequest(this, cancellationToken);
+            string groupsString = Encoding.UTF8.GetString(dataFound);
             var groups = new List<DobissGroupData>();
 
             for (int i = 0; i < groupsString.Length / OUTPUT_NAME_LENGTH; i++)

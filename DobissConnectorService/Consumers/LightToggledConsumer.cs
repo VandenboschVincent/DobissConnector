@@ -1,12 +1,13 @@
 ﻿using DobissConnectorService.Consumers.Messages;
-using DobissConnectorService.Dobiss;
 using DobissConnectorService.Dobiss.Models;
-using DobissConnectorService.Services;
+using DobissConnectorService.Handlers.Messages;
+using Mediator;
+using Microsoft.Extensions.Logging;
 using SlimMessageBus;
 
 namespace DobissConnectorService.Consumers
 {
-    public class LightToggledConsumer(DobissClientFactory dobissClientFactory, IPublishBus publishBus, ILogger<LightToggledConsumer> logger) : IConsumer<IConsumerContext<LightToggledMessage>>
+    public class LightToggledConsumer(ILogger<LightToggledConsumer> logger, LightCacheService lightCacheService, IMediator mediator) : IConsumer<IConsumerContext<LightToggledMessage>>
     {
         public async Task OnHandle(IConsumerContext<LightToggledMessage> message, CancellationToken cancellationToken)
         {
@@ -19,19 +20,10 @@ namespace DobissConnectorService.Consumers
             int module = path[^3] - '0';
             int device = path[^1] - '0';
 
-            Light? light = Worker.lights.FirstOrDefault(x => x.ModuleKey == module && x.Key == device) 
+            Light? light = lightCacheService.Get(module, device)
                 ?? throw new ArgumentException($"Light with module {module} and device {device} not found");
-            DobissService service = dobissClientFactory.Get()
-                ?? throw new ArgumentException("Dobiss client is null");
 
-            if (light.CurrentValue != StateToInt(message.Message.State))
-            {
-                await service.ToggleOutput(light.ModuleKey, light.Key, cancellationToken);
-                light.CurrentValue = StateToInt(message.Message.State);
-            }
-            else
-                logger.LogInformation("Light already in state {State}", message.Message.State);
-            await publishBus.Publish(new LightStateMessage(message.Message.State), $"{Worker.topicPath}{module}x{device}/state", null, cancellationToken);
+            await mediator.Send(new ToggleLightMessage(light, StateToInt(message.Message.State)), cancellationToken);
 
         }
 

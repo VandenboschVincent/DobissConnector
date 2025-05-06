@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace DobissConnectorService.Dobiss.Models
 {
-    public class Settings
+    public class DobissSettings
     {
         public int Delay { get; set; } = 5000;
         [Required]
@@ -15,11 +10,14 @@ namespace DobissConnectorService.Dobiss.Models
         [Required]
         public string DobissIp { get; set; } = default!;
         public int DobissPort { get; set; } = 10001!;
-        [Required]
-        public string MqttIp { get; set; } = default!;
+       
+    }
+
+    public class MqttSettings
+    {
+        public string? MqttIp { get; set; }
         public int Mqttport { get; set; } = 1883;
         public string? MqttUser { get; set; }
         public string? MqttPassword { get; set; }
     }
-
 }

@@ -4,6 +4,8 @@ using MQTTnet;
 using SlimMessageBus;
 using SlimMessageBus.Host;
 using SlimMessageBus.Host.Mqtt;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DobissConnectorService.Consumers
 {
