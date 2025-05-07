@@ -84,7 +84,6 @@ The REST API is available if enabled in your environment and provides endpoints 
 
    ```bash
    git clone https://github.com/vandenboschvincent/dobissconnector.git
-   cd dobiss-mqtt-bridge
    ```
 
 2. **Configure the app**
@@ -101,12 +100,15 @@ To run using Docker:
 docker run -d \
   --name dobiss-connector \
   -v /path/to/your/appsettings.json:/app/appsettings.json \
-  -p 5000:80 \
+  -p 8080:8080 \
+  -p 8081:8081 \
   vandenboschvincent/dobissconnectorserviceapp
 ```
 
 * Replace `/path/to/your/appsettings.json` with the full path to your local config.
-* Ensure port `5000` (or any mapped port) is exposed if you plan to access the API.
+* Ensure port `8080` (or any mapped port) is exposed if you plan to access the API.
+* 8081 is https
+
 
 ---
 
