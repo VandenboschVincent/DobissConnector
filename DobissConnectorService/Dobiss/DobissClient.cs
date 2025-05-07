@@ -44,7 +44,7 @@ namespace DobissConnectorService.Dobiss
                 await Task.Delay(int.MaxValue, cancellationTokenSource.Token).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
                 if (timeoutCts.Token.IsCancellationRequested)
                 {
-                    logger.LogWarning("Timed out");
+                    logger.LogInformation("Max time reached for request");
                 }
 
                 //Filter out first 32 bytes

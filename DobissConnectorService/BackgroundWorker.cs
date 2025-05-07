@@ -76,9 +76,9 @@ namespace DobissConnectorService
                         logger.LogInformation("Light {Light} has changed to {Status}", light.Name, outputStatus);
                     }
                     if (outputStatus == 0 || outputStatus == 100)
-                        await publishBus.Publish(new LightStateMessage(outputStatus == 100 ? "ON" : "OFF"), $"{topicPath}{module.module}x{light.Key}/state", null, cancellationToken);
+                        await publishBus.Publish(new LightChangedMessage(outputStatus == 100 ? "ON" : "OFF"), $"{topicPath}{module.module}x{light.Key}/state", null, cancellationToken);
                     else
-                        await publishBus.Publish(new LightStateMessage(outputStatus.ToString()), $"{topicPath}{module.module}x{light.Key}/state", null, cancellationToken);
+                        await publishBus.Publish(new LightChangedMessage(outputStatus.ToString()), $"{topicPath}{module.module}x{light.Key}/state", null, cancellationToken);
                 }
             }
         }

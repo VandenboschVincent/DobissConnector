@@ -1,11 +1,11 @@
 ﻿using DobissConnectorService.Dobiss.Models;
 using Mediator;
 
-namespace DobissConnectorService.Handlers.Messages
+namespace DobissConnectorService.CommandHandlers.Commands
 {
-    public class DimLightMessage : ICommand
+    public class DimLightCommand : ICommand
     {
-        public DimLightMessage(Light light, int newState)
+        public DimLightCommand(Light light, int newState)
         {
             Light = light;
             NewState = newState;

@@ -41,7 +41,7 @@ namespace DobissConnectorService.Dobiss
 
         public async Task<List<DobissGroupData>> Execute(CancellationToken cancellationToken)
         {
-            var dataFound = await this.dobissClient.SendRequest(this, cancellationToken);
+            var dataFound = await dobissClient.SendRequest(this, cancellationToken);
             string groupsString = Encoding.UTF8.GetString(dataFound);
             var groups = new List<DobissGroupData>();
 
@@ -60,7 +60,7 @@ namespace DobissConnectorService.Dobiss
 
         public async Task<string> ExecuteHex(CancellationToken cancellationToken)
         {
-            return ConversionUtils.BytesToHex(await this.dobissClient.SendRequest(this, cancellationToken));
+            return ConversionUtils.BytesToHex(await dobissClient.SendRequest(this, cancellationToken));
         }
     }
 }

@@ -1,14 +1,17 @@
+using DobissConnectorService.CommandHandlers.Commands;
 using DobissConnectorService.Dobiss.Models;
-using DobissConnectorService.Handlers.Messages;
 using Mediator;
-using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using SlimMessageBus;
-using System.Threading;
 
 namespace DobissConnectorService.App.Controllers
 {
+
+    /// <summary>
+    /// Controller for managing lights
+    /// </summary>
+    /// <param name="logger"></param>
+    /// <param name="lightCacheService"></param>
+    /// <param name="mediator"></param>
     [ApiController]
     [Route("[controller]")]
     public class LightController(ILogger<LightController> logger, LightCacheService lightCacheService, IMediator mediator) : ControllerBase
@@ -55,7 +58,7 @@ namespace DobissConnectorService.App.Controllers
             if (light == null)
                 return NotFound($"No light found with key {key} and module {module}");
 
-            await mediator.Send(new ToggleLightMessage(light, null));
+            await mediator.Send(new ChangeLightCommand(light, null));
 
             return NoContent();
         }
@@ -75,7 +78,7 @@ namespace DobissConnectorService.App.Controllers
             if (light == null)
                 return NotFound($"No light found with key {key} and module {module}");
 
-            await mediator.Send(new ToggleLightMessage(light, Convert.ToInt32(value) * 100));
+            await mediator.Send(new ChangeLightCommand(light, Convert.ToInt32(value) * 100));
 
             return NoContent();
         }
@@ -97,7 +100,7 @@ namespace DobissConnectorService.App.Controllers
             if (value < 0 || value > 100)
                 return BadRequest($"Value must be between 0 and 100");
 
-            await mediator.Send(new DimLightMessage(light, value));
+            await mediator.Send(new DimLightCommand(light, value));
 
             return NoContent();
         }

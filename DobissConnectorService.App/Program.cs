@@ -30,11 +30,10 @@ builder.Services.AddMediator();
 builder.Services.AddSlimMessageBus(slimBuilder =>
 {
     slimBuilder.PerMessageScopeEnabled()
-        .Consume<LightToggledMessage>(cfg => cfg.Topic("homeassistant/light/set/+").WithConsumerOfContext<LightToggledConsumer>())
-        .Consume<LightToggledMessage>(cfg => cfg.Topic("homeassistant/light/dim/+").WithConsumerOfContext<LightDimmedConsumer>())
-        .Produce<LightStateMessage>(cfg => cfg.DefaultPath("homeassistant"))
+        .Consume<ChangeLigthMessage>(cfg => cfg.Topic("homeassistant/light/set/+").WithConsumerOfContext<LightChangedConsumer>())
+        .Produce<LightChangedMessage>(cfg => cfg.DefaultPath("homeassistant"))
         .Produce<LightConfigMessage>(cfg => cfg.DefaultPath("homeassistant"))
-        .AddServicesFromAssemblyContaining<LightToggledConsumer>()
+        .AddServicesFromAssemblyContaining<LightChangedConsumer>()
         .AddJsonSerializer();
     if (mqttConfig.Exists())
     {

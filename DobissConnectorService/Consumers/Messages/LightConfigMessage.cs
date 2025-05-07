@@ -23,10 +23,17 @@ namespace DobissConnectorService.Consumers.Messages
         {
             brightness = true;
             brightness_scale = 100;
-            cmd_t = $"homeassistant/light/dim/{unique_id}";
+            brightness_command_topic = $"homeassistant/light/set/{unique_id}";
+            brightness_state_topic = $"~/state";
+            on_command_type = "brightness";
+            brightness_value_template = "{{ value | float | int }}";
         }
 
         public int brightness_scale { get; set; }
+        public string on_command_type { get; set; }
+        public string brightness_state_topic { get; set; }
+        public string brightness_command_topic { get; set; }
+        public string brightness_value_template { get; set; }
     }
 
     public class LightConfigMessage
@@ -34,25 +41,28 @@ namespace DobissConnectorService.Consumers.Messages
         public LightConfigMessage(string name, int module, int id)
         {
             unique_id = $"dobiss_{module}x{id}".ToLower();
-            cmd_t = $"homeassistant/light/set/{unique_id}";
+            command_topic = $"homeassistant/light/set/{unique_id}";
             device = new Device(name, module, id);
             this.name = name;
             optimistic = false;
             schema = "json";
-            stat_t = "~/state";
+            state_topic = "~/state";
             brightness = false;
             Path = $"homeassistant/light/{unique_id}";
-            command_template = "{ \"state\": {{ value }} }";
+            state_value_template = "{{ value | float | int }}";
+            payload_on = "100";
+            payload_off = "0";
         }
-
-        public string cmd_t { get; set; }
+        public string payload_on { get; set; }
+        public string payload_off { get; set; }
+        public string command_topic { get; set; }
         public Device device { get; set; }
         public string name { get; set; }
         public bool optimistic { get; set; }
         public string schema { get; set; }
-        public string stat_t { get; set; }
+        public string state_topic { get; set; }
         public string unique_id { get; set; }
-        public string command_template { get; set; }
+        public string state_value_template { get; set; }
 
         [JsonPropertyName("~")]
         public string Path { get; set; }

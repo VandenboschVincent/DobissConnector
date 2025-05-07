@@ -1,17 +1,17 @@
 ﻿using DobissConnectorService.Consumers.Messages;
 using DobissConnectorService.Dobiss.Models;
 using DobissConnectorService.Dobiss;
-using DobissConnectorService.Handlers.Messages;
 using DobissConnectorService.Services;
 using Mediator;
 using Microsoft.Extensions.Logging;
 using SlimMessageBus;
+using DobissConnectorService.CommandHandlers.Commands;
 
-namespace DobissConnectorService.Handlers
+namespace DobissConnectorService.CommandHandlers
 {
-    public class DimLightMessageHandler(ILogger<DimLightMessageHandler> logger, DobissClientFactory dobissClientFactory, LightCacheService lightCacheService, IPublishBus publishBus) : ICommandHandler<DimLightMessage>
+    public class DimLightCommandHandler(ILogger<DimLightCommandHandler> logger, DobissClientFactory dobissClientFactory, LightCacheService lightCacheService, IPublishBus publishBus) : ICommandHandler<DimLightCommand>
     {
-        public async ValueTask<Unit> Handle(DimLightMessage command, CancellationToken cancellationToken)
+        public async ValueTask<Unit> Handle(DimLightCommand command, CancellationToken cancellationToken)
         {
             DobissService service = dobissClientFactory.Get()
                 ?? throw new ArgumentException("Dobiss client is null");
@@ -28,7 +28,7 @@ namespace DobissConnectorService.Handlers
             }
             else
                 logger.LogInformation("Light already in state {State}", command.NewState);
-            await publishBus.Publish(new LightStateMessage(command.NewState.ToString()), $"{BackgroundWorker.topicPath}{light.ModuleKey}x{light.Key}/state", null, cancellationToken);
+            await publishBus.Publish(new LightChangedMessage(command.NewState.ToString()), $"{BackgroundWorker.topicPath}{light.ModuleKey}x{light.Key}/state", null, cancellationToken);
             return Unit.Value;
         }
     }

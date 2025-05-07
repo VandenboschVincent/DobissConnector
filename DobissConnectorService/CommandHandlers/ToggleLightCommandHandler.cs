@@ -1,17 +1,17 @@
 ﻿using DobissConnectorService.Consumers.Messages;
 using DobissConnectorService.Dobiss.Models;
 using DobissConnectorService.Dobiss;
-using DobissConnectorService.Handlers.Messages;
 using DobissConnectorService.Services;
 using Mediator;
 using Microsoft.Extensions.Logging;
 using SlimMessageBus;
+using DobissConnectorService.CommandHandlers.Commands;
 
-namespace DobissConnectorService.Handlers
+namespace DobissConnectorService.CommandHandlers
 {
-    public class ToggleLightMessageHandler(ILogger<ToggleLightMessageHandler> logger, DobissClientFactory dobissClientFactory, LightCacheService lightCacheService, IPublishBus publishBus) : ICommandHandler<ToggleLightMessage>
+    public class ToggleLightCommandHandler(ILogger<ToggleLightCommandHandler> logger, DobissClientFactory dobissClientFactory, LightCacheService lightCacheService, IPublishBus publishBus) : ICommandHandler<ChangeLightCommand>
     {
-        public async ValueTask<Unit> Handle(ToggleLightMessage command, CancellationToken cancellationToken)
+        public async ValueTask<Unit> Handle(ChangeLightCommand command, CancellationToken cancellationToken)
         {
             DobissService service = dobissClientFactory.Get()
                 ?? throw new ArgumentException("Dobiss client is null");
@@ -32,18 +32,9 @@ namespace DobissConnectorService.Handlers
             }
             else
                 logger.LogInformation("Light already in state {State}", command.NewState);
-            await publishBus.Publish(new LightStateMessage(IntToState(command.NewState.Value)), $"{BackgroundWorker.topicPath}{light.ModuleKey}x{light.Key}/state", null, cancellationToken);
+            await publishBus.Publish(new LightChangedMessage(command.NewState.Value.ToString()), $"{BackgroundWorker.topicPath}{light.ModuleKey}x{light.Key}/state", null, cancellationToken);
             return Unit.Value;
         }
 
-        private static string IntToState(int state)
-        {
-            return state switch
-            {
-                100 => "ON",
-                0 => "OFF",
-                _ => throw new ArgumentException($"Invalid state: {state}")
-            };
-        }
     }
 }
