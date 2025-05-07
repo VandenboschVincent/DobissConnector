@@ -15,7 +15,11 @@ namespace DobissConnectorService.Services
 
         public async Task DimOutput(int module, int address, int value, CancellationToken cancellationToken = default)
         {
-            DobissSendActionRequest request = new(dobissClient, module, address, DobissSendActionRequest.ActionType.ON, value);
+            DobissSendActionRequest request = new(dobissClient
+                , module
+                , address
+                , value == 0 ? DobissSendActionRequest.ActionType.TOGGLE : DobissSendActionRequest.ActionType.ON
+                , value == 0 ? null : value);
             await request.Execute(cancellationToken);
         }
 
