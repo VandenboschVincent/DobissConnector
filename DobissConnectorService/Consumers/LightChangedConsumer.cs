@@ -11,7 +11,7 @@ namespace DobissConnectorService.Consumers
     {
         public async Task OnHandle(IConsumerContext<ChangeLigthMessage> message, CancellationToken cancellationToken)
         {
-            logger.LogInformation("Handle message");
+            logger.LogDebug("Handle message {@ChangeLigthMessage}", message);
             string? path = message.Headers["origPath"].ToString();
             if (string.IsNullOrEmpty(path))
             {
