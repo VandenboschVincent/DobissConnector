@@ -50,11 +50,7 @@ namespace DobissConnectorService.Consumers.Messages
             brightness = false;
             Path = $"homeassistant/light/{unique_id}";
             state_value_template = "{{ value | float | int }}";
-            payload_on = "100";
-            payload_off = "0";
         }
-        public string payload_on { get; set; }
-        public string payload_off { get; set; }
         public string command_topic { get; set; }
         public Device device { get; set; }
         public string name { get; set; }

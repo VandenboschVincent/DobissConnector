@@ -9,7 +9,7 @@ using DobissConnectorService.CommandHandlers.Commands;
 
 namespace DobissConnectorService.CommandHandlers
 {
-    public class ToggleLightCommandHandler(ILogger<ToggleLightCommandHandler> logger, DobissClientFactory dobissClientFactory, LightCacheService lightCacheService, IPublishBus publishBus) : ICommandHandler<ChangeLightCommand>
+    public class ChangeLightCommandHandler(ILogger<ChangeLightCommandHandler> logger, DobissClientFactory dobissClientFactory, LightCacheService lightCacheService, IPublishBus publishBus) : ICommandHandler<ChangeLightCommand>
     {
         public async ValueTask<Unit> Handle(ChangeLightCommand command, CancellationToken cancellationToken)
         {
@@ -24,15 +24,19 @@ namespace DobissConnectorService.CommandHandlers
                 _ => 0
             };
 
+            if (light.ModuleType != ModuleType.DIMMER && command.NewState > 0 && command.NewState < 100)
+                throw new ArgumentException($"Light {light.Name} is not a dimmable light");
+
             if (light.CurrentValue != command.NewState)
             {
-                await service.ToggleOutput(light.ModuleKey, light.Key, cancellationToken);
+                await service.DimOutput(light.ModuleKey, light.Key, command.NewState.Value, cancellationToken);
                 light.CurrentValue = command.NewState.Value;
                 lightCacheService.Update(light);
+                logger.LogInformation("Light {LightName} set to {State}", light.Name, command.NewState);
             }
             else
-                logger.LogInformation("Light already in state {State}", command.NewState);
-            await publishBus.Publish(new LightChangedMessage(command.NewState.Value.ToString()), $"{BackgroundWorker.topicPath}{light.ModuleKey}x{light.Key}/state", null, cancellationToken);
+                logger.LogInformation("Light {LightName} already in state {State}", light.Name, command.NewState);
+            await publishBus.Publish(new LightChangedMessage(command.NewState == 0 ? "OFF" : "ON", command.NewState), $"{BackgroundWorker.topicPath}{light.ModuleKey}x{light.Key}/state", null, cancellationToken);
             return Unit.Value;
         }
 

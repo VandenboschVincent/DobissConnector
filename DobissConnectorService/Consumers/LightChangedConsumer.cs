@@ -4,7 +4,6 @@ using DobissConnectorService.Dobiss.Models;
 using Mediator;
 using Microsoft.Extensions.Logging;
 using SlimMessageBus;
-using System.Net.Http.Headers;
 
 namespace DobissConnectorService.Consumers
 {
@@ -23,10 +22,7 @@ namespace DobissConnectorService.Consumers
 
             Light? light = lightCacheService.Get(module, device)
                 ?? throw new ArgumentException($"Light with module {module} and device {device} not found");
-            if (!message.Message.brightness.HasValue)
-                await mediator.Send(new ChangeLightCommand(light, StateToInt(message.Message.State)), cancellationToken);
-            else
-                await mediator.Send(new DimLightCommand(light, message.Message.brightness.Value), cancellationToken);
+            await mediator.Send(new ChangeLightCommand(light, message.Message.Brightness ?? StateToInt(message.Message.State)), cancellationToken);
         }
 
         private static int StateToInt(string state)

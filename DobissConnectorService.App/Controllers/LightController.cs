@@ -100,7 +100,7 @@ namespace DobissConnectorService.App.Controllers
             if (value < 0 || value > 100)
                 return BadRequest($"Value must be between 0 and 100");
 
-            await mediator.Send(new DimLightCommand(light, value));
+            await mediator.Send(new ChangeLightCommand(light, value));
 
             return NoContent();
         }
