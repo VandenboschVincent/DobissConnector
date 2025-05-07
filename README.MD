@@ -13,6 +13,7 @@ A lightweight .NET bridge for connecting a **Dobiss light control system** to an
 - Exposes a REST API for manual control or integration without MQTT
 - Configurable polling interval to sync light statuses
 - Lightweight Docker container support
+- Only works with AMBIANCEPRO and EVOLUTIONPRO
 
 ---
 
