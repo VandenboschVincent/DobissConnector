@@ -4,10 +4,11 @@ using DobissConnectorService.Dobiss.Models;
 using Mediator;
 using Microsoft.Extensions.Logging;
 using SlimMessageBus;
+using System.Text.RegularExpressions;
 
 namespace DobissConnectorService.Consumers
 {
-    public class LightChangedConsumer(ILogger<LightChangedConsumer> logger, LightCacheService lightCacheService, IMediator mediator) : IConsumer<IConsumerContext<ChangeLigthMessage>>
+    public partial class LightChangedConsumer(ILogger<LightChangedConsumer> logger, LightCacheService lightCacheService, IMediator mediator) : IConsumer<IConsumerContext<ChangeLigthMessage>>
     {
         public async Task OnHandle(IConsumerContext<ChangeLigthMessage> message, CancellationToken cancellationToken)
         {
@@ -17,8 +18,9 @@ namespace DobissConnectorService.Consumers
             {
                 throw new ArgumentException("Path is null or empty");
             }
-            int module = path[^3] - '0';
-            int device = path[^1] - '0';
+            var matches = MatchGroupRegex().Match(path);
+            int module = int.Parse(matches.Groups[1].ValueSpan);
+            int device = int.Parse(matches.Groups[2].ValueSpan);
 
             Light? light = lightCacheService.Get(module, device)
                 ?? throw new ArgumentException($"Light with module {module} and device {device} not found");
@@ -43,5 +45,8 @@ namespace DobissConnectorService.Consumers
             }
             throw new ArgumentException($"Invalid state: {state}", nameof(state));
         }
+
+        [GeneratedRegex("(\\d+)[xX](\\d+)")]
+        private static partial Regex MatchGroupRegex();
     }
 }
