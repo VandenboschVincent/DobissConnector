@@ -1,19 +1,13 @@
 ﻿using System;
 namespace DobissConnectorService.Dobiss.Models
 {
-    public class Light
+    public class Light(int moduleKey, int key, ModuleType moduleType, string name, LightType lightType)
     {
-        public Light(int moduleKey, int key, ModuleType moduleType, string name)
-        {
-            ModuleKey = moduleKey;
-            Key = key;
-            ModuleType = moduleType;
-            Name = name;
-        }
-        public int ModuleKey { get; }
-        public int Key { get; }
-        public ModuleType ModuleType { get; }
-        public string Name { get; }
+        public int ModuleKey { get; } = moduleKey;
+        public int Key { get; } = key;
+        public ModuleType ModuleType { get; } = moduleType;
+        public LightType LightType { get; } = lightType;
+        public string Name { get; } = name;
         public int CurrentValue { get; set; }
     }
 }

@@ -4,7 +4,7 @@
     /// Defines a request that can be sent via DobissClient.
     /// </summary>
     /// <typeparam name="O">The type of the response object.</typeparam>
-    public interface IDobissRequest<requestType> where requestType : class
+    public interface IDobissRequest<requestType>
     {
         /// <summary>
         /// Gets the raw byte array to send for this request.

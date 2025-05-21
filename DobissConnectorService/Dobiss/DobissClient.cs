@@ -1,49 +1,65 @@
 ﻿using DobissConnectorService.Dobiss.Interfaces;
 using DobissConnectorService.Dobiss.Utils;
 using Microsoft.Extensions.Logging;
-using SuperSimpleTcp;
 using System.Net.Sockets;
 
 namespace DobissConnectorService.Dobiss
 {
-    public class DobissClient(string ip, int port, ILogger logger) : IDobissClient
+    public class DobissClient(string host, int port, ILogger logger) : IDobissClient
     {
         private const int SocketTimeout = 5000;
+        private const int RECV_SIZE = 1024;
+        private MySocket? _socket;
+        private readonly SemaphoreSlim semaphoreSlim = new(1);
 
-        public async Task<byte[]> SendRequest(byte[] parameters, int maxLines = 100, CancellationToken cancellationToken = default)
+        public async ValueTask<IAsyncDisposable> Connect(CancellationToken cancellationToken)
+        {
+            _socket = new MySocket(host, port)
+            {
+                SendTimeout = SocketTimeout,
+                ReceiveTimeout = SocketTimeout
+            };
+            await _socket.Connect(semaphoreSlim, cancellationToken);
+            return _socket;
+        }
+
+        public async Task<byte[]> SendRequest(byte[] data, int responseSize, CancellationToken cancellationToken)
         {
             try
             {
-                using SimpleTcpClient tcpClient = new(ip, port);
+                if (_socket == null)
+                {
+                    throw new ArgumentException("socket not connected");
+                }
                 using CancellationTokenSource timeoutCts = new(SocketTimeout);
                 using CancellationTokenSource cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
-                var buffer = new List<byte>();
-                tcpClient.Events.DataReceived += (sender, e) =>
-                {
-                    buffer.AddRange(e.Data.Slice(0, 32));
-                    if (buffer.Count >= maxLines * 16)
-                    {
-                        cancellationTokenSource.Cancel();
-                    }
-                };
-                tcpClient.Connect();
+                List<byte> _recvBuffer = [];
+                await _socket.SendAsync(data, cancellationTokenSource.Token);
+                int totalSize = data.Length + ((32 - (data.Length % 32)) % 32)
+                              + responseSize + ((32 - (responseSize % 32)) % 32);
 
-                logger.LogTrace("Socket Request: {Parameters}", ConversionUtils.BytesToHex(parameters));
-                await tcpClient.SendAsync(parameters, cancellationToken);
-                await Task.Delay(int.MaxValue, cancellationTokenSource.Token).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
-                if (timeoutCts.Token.IsCancellationRequested)
+                while (_recvBuffer.Count < totalSize && _socket != null)
                 {
-                    logger.LogInformation("Max time reached for request");
+                    byte[] buffer = new byte[RECV_SIZE];
+                    int received = await _socket.ReceiveAsync(buffer, cancellationTokenSource.Token);
+                    if (received > 0)
+                        _recvBuffer.AddRange(buffer[..received]);
+                    else
+                        break;
                 }
 
-                //Filter out first 32 bytes
-                logger.LogTrace("Socket Response: {Response}", ConversionUtils.BytesToHex([.. buffer[32..]]));
+                if (_recvBuffer.Count < totalSize)
+                    return [];
 
-                return [.. buffer[32..]];
+                byte[] response = [.. _recvBuffer
+                    .Skip(data.Length + ((32 - (data.Length % 32)) % 32))
+                    .Take(responseSize)];
+
+                return response;
             }
             catch (SocketException socketEx) when (socketEx.SocketErrorCode == SocketError.TimedOut)
             {
-                logger.LogError(socketEx, "Timeout for request {Parameters}", ConversionUtils.BytesToHex(parameters));
+                logger.LogError(socketEx, "Timeout for request {Parameters}", Convert.ToHexString(data));
             }
             catch (TaskCanceledException timedOutEx)
             {

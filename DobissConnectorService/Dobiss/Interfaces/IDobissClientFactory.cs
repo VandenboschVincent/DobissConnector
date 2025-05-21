@@ -6,7 +6,7 @@ namespace DobissConnectorService.Dobiss.Interfaces
 {
     public interface IDobissClientFactory
     {
-        DobissService Create(string ip, int port, Dictionary<int, ModuleType> moduleTypeMap, ILogger logger, LightCacheService lightCacheService);
+        DobissService Create(string ip, int port, ILogger logger, LightCacheService lightCacheService);
         DobissService? Get();
     }
 }

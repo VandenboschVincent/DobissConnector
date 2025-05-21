@@ -1,6 +1,5 @@
 ﻿using DobissConnectorService.Dobiss.Interfaces;
 using DobissConnectorService.Dobiss.Models;
-using DobissConnectorService.Dobiss.Utils;
 using System.Text;
 
 namespace DobissConnectorService.Dobiss
@@ -14,7 +13,7 @@ namespace DobissConnectorService.Dobiss
 
         public byte[] GetRequestBytes()
         {
-            return ConversionUtils.HexToBytes(FETCH_MOODS_REQUEST);
+            return Convert.FromHexString(FETCH_MOODS_REQUEST);
         }
 
         public int GetMaxOutputLines()
@@ -38,7 +37,7 @@ namespace DobissConnectorService.Dobiss
 
         public async Task<string> ExecuteHex(CancellationToken cancellationToken)
         {
-            return ConversionUtils.BytesToHex(await client.SendRequest(GetRequestBytes(), GetMaxOutputLines(), cancellationToken));
+            return Convert.ToHexString(await client.SendRequest(GetRequestBytes(), GetMaxOutputLines(), cancellationToken));
         }
     }
 }

@@ -19,6 +19,6 @@
     <PackageReference Include="SlimMessageBus.Host.Memory" Version="3.1.1" />
     <PackageReference Include="SlimMessageBus.Host.Mqtt" Version="3.1.1" />
     <PackageReference Include="SlimMessageBus.Host.Serialization.SystemTextJson" Version="3.1.1" />
-    <PackageReference Include="SuperSimpleTcp" Version="3.0.17" />
+    <PackageReference Include="System.Linq.Async" Version="6.0.1" />
   </ItemGroup>
 </Project>

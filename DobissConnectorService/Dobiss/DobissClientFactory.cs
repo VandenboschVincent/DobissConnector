@@ -1,8 +1,7 @@
-﻿
-using DobissConnectorService.Dobiss.Interfaces;
-using DobissConnectorService.Dobiss.Models;
+﻿using DobissConnectorService.Dobiss.Interfaces;
 using DobissConnectorService.Services;
 using Microsoft.Extensions.Logging;
+using System.Net.Sockets;
 
 namespace DobissConnectorService.Dobiss
 {
@@ -10,9 +9,17 @@ namespace DobissConnectorService.Dobiss
     {
         private DobissService? _instance;
 
-        public DobissService Create(string ip, int port, Dictionary<int, ModuleType> moduleTypeMap, ILogger logger, LightCacheService lightCacheService)
+        public DobissService Create(string ip, int port, ILogger logger, LightCacheService lightCacheService)
         {
-            return _instance ??= new DobissService(new DobissClient(ip, port, logger), moduleTypeMap, lightCacheService);
+            return _instance ??= CreateInstance(ip, port, logger, lightCacheService);
+        }
+
+        private DobissService CreateInstance(string ip, int port, ILogger logger, LightCacheService lightCacheService)
+        {
+            DobissClient client = new(ip, port, logger);
+            DobissService service = new(client, lightCacheService);
+            _instance = service;
+            return _instance;
         }
 
         public DobissService? Get()

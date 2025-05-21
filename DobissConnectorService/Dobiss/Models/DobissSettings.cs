@@ -6,8 +6,6 @@ namespace DobissConnectorService.Dobiss.Models
     {
         public int Delay { get; set; } = 5000;
         [Required]
-        public Dictionary<int, ModuleType> Modules { get; set; } = default!;
-        [Required]
         public string DobissIp { get; set; } = default!;
         public int DobissPort { get; set; } = 10001!;
        

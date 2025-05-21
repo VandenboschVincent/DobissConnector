@@ -1,16 +1,17 @@
 ﻿using DobissConnectorService.Dobiss.Models;
 using DobissConnectorService.Dobiss;
 using DobissConnectorService.Dobiss.Interfaces;
+using System.Runtime.CompilerServices;
 
 namespace DobissConnectorService.Services
 {
-    public class DobissService(IDobissClient dobissClient, Dictionary<int, ModuleType> moduleTypeMap, LightCacheService lightCacheService)
+    public class DobissService(IDobissClient dobissClient, LightCacheService lightCacheService)
     {
-        private const int HEX_OUTPUT_STATUS_LENGTH = 2;
+        public IDobissClient DobissClient => dobissClient;
 
         public async Task ToggleOutput(int module, int address, CancellationToken cancellationToken = default)
         {
-            DobissSendActionRequest request = new(dobissClient, module, address);
+            DobissSendActionRequest request = new(dobissClient, module, address, 100);
             await request.Execute(cancellationToken);
         }
 
@@ -19,73 +20,31 @@ namespace DobissConnectorService.Services
             DobissSendActionRequest request = new(dobissClient
                 , module
                 , address
-                , value == 0 ? DobissSendActionRequest.ActionType.TOGGLE : DobissSendActionRequest.ActionType.ON
-                , value == 0 ? null : value);
+                , value
+                , value == 0 ? DobissSendActionRequest.ActionType.OFF : DobissSendActionRequest.ActionType.ON);
             await request.Execute(cancellationToken);
         }
 
-        public async Task<string> RequestModuleStatusAsHex(int module, CancellationToken cancellationToken = default)
+        public async IAsyncEnumerable<(int moduleIndex, int index, int value)> RequestAllStatus(List<DobissModule> modules, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            return await RequestStatusHex(module, cancellationToken);
-        }
-
-        public async Task<string> RequestOutputStatusAsHex(int module, int address, CancellationToken cancellationToken = default)
-        {
-            string result = await RequestStatusHex(module, cancellationToken);
-            int offset = address * HEX_OUTPUT_STATUS_LENGTH;
-
-            if (string.IsNullOrEmpty(result) || result.Length < offset + HEX_OUTPUT_STATUS_LENGTH)
-            {
-                return string.Empty;
-            }
-
-            return result.Substring(offset, HEX_OUTPUT_STATUS_LENGTH);
-        }
-
-        public async Task<DobissOutput?> RequestOutputStatusAsObject(int module, int address, CancellationToken cancellationToken = default)
-        {
-            var moduleStatuses = await RequestStatus(module, cancellationToken);
-
-            if (moduleStatuses == null || moduleStatuses.Count == 0)
-            {
-                return null;
-            }
-
-            return moduleStatuses[address];
-        }
-
-        public async Task<List<DobissModule>> RequestAllStatus(CancellationToken cancellationToken = default)
-        {
-            var modules = new List<DobissModule>();
-            foreach(var module in moduleTypeMap.Select(t => t.Key))
+            foreach(var module in modules)
             {
                 var outputs = await RequestStatus(module, cancellationToken);
                 if (outputs.Count != 0)
                 {
-                    modules.Add(new DobissModule(module, outputs));
+                    foreach (var (index, value) in outputs)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        yield return (module.Index, index, value);
+                    }
                 }
             }
-            return modules;
         }
 
-        public async Task<List<DobissOutput>> RequestStatus(int module, CancellationToken cancellationToken = default)
+        public async Task<List<(int index, int value)>> RequestStatus(DobissModule module, CancellationToken cancellationToken = default)
         {
-            if (moduleTypeMap.TryGetValue(module, out ModuleType knownType))
-            {
-                return await new DobissRequestStatusRequest(dobissClient, knownType, module, lightCacheService.GetAll().Where(t => t.ModuleKey == module)?.Count()).Execute(cancellationToken);
-            }
-            return [];
-        }
-
-        private async Task<string> RequestStatusHex(int module, CancellationToken cancellationToken = default)
-        {
-            if (moduleTypeMap.TryGetValue(module, out ModuleType knownType))
-            {
-                return await new DobissRequestStatusRequest(dobissClient, knownType, module, lightCacheService.GetAll().Where(t => t.ModuleKey == module)?.Count())
-                    .ExecuteHex(cancellationToken);
-            }
-
-            return string.Empty;
+            return await new DobissRequestStatusRequest(dobissClient, module.Type, module.Index, lightCacheService.GetAll().Count(t => t.ModuleKey == module.Index))
+                .Execute(cancellationToken);
         }
 
         public async Task<List<DobissGroupData>> FetchGroupsData(CancellationToken cancellationToken = default)
@@ -93,20 +52,20 @@ namespace DobissConnectorService.Services
             return await new DobissFetchGroupsRequest(dobissClient).Execute(cancellationToken);
         }
 
+        public async Task<List<DobissModule>> FetchModules(CancellationToken cancellationToken = default)
+        {
+            return await new DobissFetchModulesRequest(dobissClient).Execute(cancellationToken);
+        }
+
         public async Task<List<DobissGroupData>> FetchMoodsData(CancellationToken cancellationToken = default)
         {
             return await new DobissFetchMoodsRequest(dobissClient).Execute(cancellationToken);
         }
 
-        public async Task<List<DobissGroupData>> FetchOutputsData(int module, CancellationToken cancellationToken = default)
+        public async Task<List<DobissOutput>> FetchOutputsData(DobissModule module, CancellationToken cancellationToken = default)
         {
-            if (moduleTypeMap.TryGetValue(module, out ModuleType value))
-            {
-                // Use known module type
-                return await new DobissFetchOutputsRequest(dobissClient, value, module).Execute(cancellationToken);
-            }
-
-            return [];
+            // Use known module type
+            return await new DobissFetchOutputsRequest(dobissClient, module).Execute(cancellationToken);
         }
     }
 }

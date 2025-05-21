@@ -1,67 +1,72 @@
 ﻿using DobissConnectorService.Dobiss.Interfaces;
 using DobissConnectorService.Dobiss.Models;
-using DobissConnectorService.Dobiss.Utils;
 using System.Text;
 
 namespace DobissConnectorService.Dobiss
 {
-    public class DobissFetchOutputsRequest : IDobissRequest<List<DobissGroupData>>
+    public class DobissFetchOutputsRequest : IDobissRequest<List<DobissOutput>>
     {
-        private static readonly byte[] BASE_FETCH_OUTPUTS_REQUEST = ConversionUtils.HexToBytes("af10ffff0100200c20ffffffffffffaf");
+        private const string BASE_FETCH_OUTPUTS_REQUEST = "AF10FFFF0100200C20FFFFFFFFFFFFAF";
 
         private const int INDEX_TYPE = 2;
         private const int INDEX_MODULE = 3;
+        private const int INDEX_OUTPUTS = 7;
         private static readonly char[] INVALID_CHAR = ['\u0000', '\u0001', '\0', '\u0002', '\u0003', '\uFFFD'];
-        private const int OUTPUT_NAME_LENGTH = 32;
 
         private readonly IDobissClient dobissClient;
-        private readonly ModuleType type;
-        private readonly int module;
+        private readonly DobissModule module;
 
-        public DobissFetchOutputsRequest(IDobissClient client, ModuleType type, int module)
+        public DobissFetchOutputsRequest(IDobissClient client, DobissModule module)
         {
             this.dobissClient = client;
-            this.type = type;
             this.module = module;
         }
 
         public byte[] GetRequestBytes()
         {
-            byte[] byteArray = (byte[])BASE_FETCH_OUTPUTS_REQUEST.Clone();
+            byte[] byteArray = Convert.FromHexString(BASE_FETCH_OUTPUTS_REQUEST);
 
-            byteArray[INDEX_TYPE] = (byte)type;
-            byteArray[INDEX_MODULE] = (byte)module;
+            byteArray[INDEX_TYPE] = (byte)module.Type;
+            byteArray[INDEX_MODULE] = (byte)module.Index;
+            byteArray[INDEX_OUTPUTS] = (byte)module.OutputCount;
 
             return byteArray;
         }
 
         public int GetMaxOutputLines()
         {
-            return 26;
+            return 32 * module.OutputCount;
         }
 
-        public async Task<List<DobissGroupData>> Execute(CancellationToken cancellationToken)
+        public async Task<List<DobissOutput>> Execute(CancellationToken cancellationToken)
         {
-            var dataFound = await dobissClient.SendRequest(GetRequestBytes(), GetMaxOutputLines(), cancellationToken);
-            string groupsString = Encoding.UTF8.GetString(dataFound);
-            var groups = new List<DobissGroupData>();
+            var outputsData = await dobissClient.SendRequest(GetRequestBytes(), GetMaxOutputLines(), cancellationToken);
+            var Outputs = new List<DobissOutput>();
 
-            for (int i = 0; i < groupsString.Length / OUTPUT_NAME_LENGTH; i++)
+            if (outputsData.Length != 32 * module.OutputCount)
             {
-                string name = groupsString.Substring(i * OUTPUT_NAME_LENGTH, OUTPUT_NAME_LENGTH)
-                    .Trim(INVALID_CHAR).Trim();
-                if (!string.IsNullOrWhiteSpace(name))
-                {
-                    groups.Add(new DobissGroupData(i, name));
-                }
+                throw new InvalidDataException("Invalid data received trying to import outputs");
             }
 
-            return groups;
+            for (int outputIndex = 0; outputIndex < module.OutputCount; outputIndex++)
+            {
+                int offset = outputIndex * 32;
+                byte[] line = [.. outputsData.Skip(offset).Take(32)];
+
+                string name = Encoding.ASCII.GetString(line, 0, 30).Trim(INVALID_CHAR).Trim();
+                LightType type = (LightType)line[30];
+                byte groupIndex = line[31];
+
+                DobissOutput outputInfo = new(outputIndex, module.Index, type, groupIndex, name);
+                Outputs.Add(outputInfo);
+            }
+
+            return Outputs;
         }
 
         public async Task<string> ExecuteHex(CancellationToken cancellationToken)
         {
-            return ConversionUtils.BytesToHex(await dobissClient.SendRequest(GetRequestBytes(), GetMaxOutputLines(), cancellationToken));
+            return Convert.ToHexString(await dobissClient.SendRequest(GetRequestBytes(), GetMaxOutputLines(), cancellationToken));
         }
     }
 }

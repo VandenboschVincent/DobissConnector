@@ -1,6 +1,5 @@
 ﻿using DobissConnectorService.Consumers.Messages;
 using DobissConnectorService.Dobiss.Models;
-using DobissConnectorService.Dobiss;
 using DobissConnectorService.Services;
 using Mediator;
 using Microsoft.Extensions.Logging;
@@ -30,7 +29,10 @@ namespace DobissConnectorService.CommandHandlers
 
             if (light.CurrentValue != command.NewState)
             {
-                await service.DimOutput(light.ModuleKey, light.Key, command.NewState.Value, cancellationToken);
+                await using (await service.DobissClient.Connect(cancellationToken))
+                {
+                    await service.DimOutput(light.ModuleKey, light.Key, command.NewState.Value, cancellationToken);
+                }
                 light.CurrentValue = command.NewState.Value;
                 lightCacheService.Update(light);
                 logger.LogInformation("Light {LightName} set to {State}", light.Name, command.NewState);

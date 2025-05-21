@@ -2,6 +2,7 @@
 {
     public interface IDobissClient
     {
-        Task<byte[]> SendRequest(byte[] parameters, int maxLines = 100, CancellationToken cancellationToken = default);
+        ValueTask<IAsyncDisposable> Connect(CancellationToken cancellationToken);
+        Task<byte[]> SendRequest(byte[] data, int responseSize, CancellationToken cancellationToken);
     }
 }

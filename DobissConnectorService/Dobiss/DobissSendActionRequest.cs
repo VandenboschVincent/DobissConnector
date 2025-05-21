@@ -1,64 +1,30 @@
 ﻿using DobissConnectorService.Dobiss.Interfaces;
-using DobissConnectorService.Dobiss.Utils;
 
 namespace DobissConnectorService.Dobiss
 {
-    public class DobissSendActionRequest(IDobissClient client, int module, int address, DobissSendActionRequest.ActionType? actionType = null, int? value = null, int? delayOn = null, int? delayOff = null, int? softDim = null, int? cond = null) : IDobissRequest<object>
+    public class DobissSendActionRequest(IDobissClient client, int moduleIndex, int outputIndex, int value, DobissSendActionRequest.ActionType actionType = DobissSendActionRequest.ActionType.TOGGLE, int delayOn = -1, int delayOff = -1, int softDim = -1, int red = -1) : IDobissRequest<bool>
     {
-        private static readonly byte[] BASE_SEND_ACTION_REQUEST = ConversionUtils.HexToBytes("af02ff000000080108ffffffffffffaf0000000000000000");
-
-        // Default values
-        private const int DEFAULT_ACTION_VALUE = 100;
-        private const ActionType DEFAULT_ACTION_TYPE = ActionType.TOGGLE;
-        private const int DEFAULT_DELAY_ON = -1;
-        private const int DEFAULT_DELAY_OFF = -1;
-        private const int DEFAULT_SOFT_DIM = -1;
-        private const int DEFAULT_COND = -1;
-
-        // Indexes in the request array
-        private const int INDEX_MODULE_HEADER = 3;
-        private const int INDEX_MODULE = 16;
-        private const int INDEX_ADDRESS = 17;
-        private const int INDEX_ACTION_TYPE = 18;
-        private const int INDEX_DELAY_ON = 19;
-        private const int INDEX_DELAY_OFF = 20;
-        private const int INDEX_VALUE = 21;
-        private const int INDEX_SOFT_DIM = 22;
-        private const int INDEX_COND = 23;
-
         public byte[] GetRequestBytes()
         {
-            var byteArray = (byte[])BASE_SEND_ACTION_REQUEST.Clone();
-
-            byteArray[INDEX_MODULE_HEADER] = (byte)module;
-            byteArray[INDEX_MODULE] = (byte)module;
-            byteArray[INDEX_ADDRESS] = (byte)address;
-            byteArray[INDEX_ACTION_TYPE] = (byte)(actionType ?? DEFAULT_ACTION_TYPE);
-            byteArray[INDEX_DELAY_ON] = (byte)(delayOn ?? DEFAULT_DELAY_ON);
-            byteArray[INDEX_VALUE] = (byte)(value ?? DEFAULT_ACTION_VALUE);
-            byteArray[INDEX_SOFT_DIM] = (byte)(softDim ?? DEFAULT_SOFT_DIM);
-            byteArray[INDEX_COND] = (byte)(cond ?? DEFAULT_COND);
-
-            return byteArray;
+            return Convert.FromHexString($"AF02FF{moduleIndex:X2}0000080108FFFFFFFFFFFFAF");
         }
 
-        public int GetMaxOutputLines() => 2;
+        public int GetMaxOutputLines() => 0;
 
-        public async Task<object> Execute(CancellationToken cancellationToken)
+        public async Task<bool> Execute(CancellationToken cancellationToken)
         {
-            return await client.SendRequest(GetRequestBytes(), GetMaxOutputLines(), cancellationToken);
-        }
+            await client.SendRequest(GetRequestBytes(), GetMaxOutputLines(), cancellationToken);
 
-        public async Task<string> ExecuteHex(CancellationToken cancellationToken)
-        {
-            return (await client.SendRequest(GetRequestBytes(), GetMaxOutputLines(), cancellationToken)).ToString() ?? string.Empty;
+            byte[] requestData = [(byte)moduleIndex, (byte)outputIndex, (byte)actionType, (byte)delayOn, (byte)delayOff, (byte)value, (byte)softDim, (byte)red]; 
+            await client.SendRequest(requestData, GetMaxOutputLines(), cancellationToken);
+            return true;
         }
 
         public enum ActionType : byte
         {
-            OFF = 0,
-            ON = 1,
-            TOGGLE = 2
+            OFF = 0x00,
+            ON = 0x01,
+            TOGGLE = 0x02
         }
     }
 }

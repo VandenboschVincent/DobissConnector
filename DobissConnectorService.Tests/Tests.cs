@@ -40,7 +40,7 @@ public class Tests
     [Arguments(1, 1, 100, "")]
     public async Task DobissSendActionRequest_Tests(int module, int address, int value, string hex)
     {
-        byte[] inputByte = ConversionUtils.HexToBytes(hex);
+        byte[] inputByte = Convert.FromHexString(hex);
         GlobalHooks.dobissClientMock.Setup(x => x.SendRequest(inputByte, 2, It.IsAny<CancellationToken>()))
             .ReturnsAsync([0x00, 0x01, 0x02, 0x03])
             .Verifiable();

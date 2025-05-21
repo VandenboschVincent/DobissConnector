@@ -39,6 +39,6 @@ public class GlobalHooks
     {
         dobissClientMock.Reset();
         memoryCacheMock.Reset();
-        dobissService = new DobissService(dobissClientMock.Object, moduleTypeMap, new LightCacheService(memoryCacheMock.Object));
+        dobissService = new DobissService(dobissClientMock.Object, new LightCacheService(memoryCacheMock.Object));
     }
 }
