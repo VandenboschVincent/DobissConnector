@@ -87,7 +87,7 @@ The REST API is available if enabled in your environment and provides endpoints 
 
 ### 🐳 Docker
 
-To run using Docker:
+To run using Docker: https://hub.docker.com/r/vandenboschvincent/dobissconnectorserviceapp
 
 ```bash
 docker run -d \
