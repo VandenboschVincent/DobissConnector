@@ -9,7 +9,6 @@ A lightweight .NET bridge for connecting a **Dobiss light control system** to an
 
 - Communicates with Dobiss lighting system via TCP
 - Publishes light state and control topics to MQTT for Home Assistant integration
-- Supports multiple Dobiss module types: `RELAY`, `DIMMER`, `ZERO_TO_TEN_VOLT`
 - Exposes a REST API for manual control or integration without MQTT
 - Configurable polling interval to sync light statuses
 - Lightweight Docker container support
@@ -25,11 +24,6 @@ Configuration is provided through `appsettings.json`. Below is a sample:
 {
   "dobiss": {
     "Delay": 5000,
-    "Modules": {
-      "1": "RELAY",
-      "2": "DIMMER",
-      "3": "RELAY"
-    },
     "DobissIp": "192.168.1.153",
     "DobissPort": 10001
   },
@@ -47,7 +41,6 @@ Configuration is provided through `appsettings.json`. Below is a sample:
 | Field        | Type   | Description                                                                             |
 | ------------ | ------ | --------------------------------------------------------------------------------------- |
 | `Delay`      | int    | Polling interval in milliseconds. Set to `0` to disable status polling.                 |
-| `Modules`    | object | Map of module numbers to their types. Supported: `RELAY`, `DIMMER`, `ZERO_TO_TEN_VOLT`. |
 | `DobissIp`   | string | IP address of the Dobiss controller.                                                    |
 | `DobissPort` | int    | Port number of the Dobiss controller (default: `10001`).                                |
 
