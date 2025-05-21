@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DobissConnectorService", "D
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DobissConnectorService.App", "DobissConnectorService.App\DobissConnectorService.App.csproj", "{7BCE5E93-332C-415A-860E-D64C16F7CD73}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DobissConnectorService.Tests", "DobissConnectorService.Tests\DobissConnectorService.Tests.csproj", "{1B63CD05-A03E-946A-A8C5-D94A2F333D8A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{7BCE5E93-332C-415A-860E-D64C16F7CD73}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7BCE5E93-332C-415A-860E-D64C16F7CD73}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7BCE5E93-332C-415A-860E-D64C16F7CD73}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B63CD05-A03E-946A-A8C5-D94A2F333D8A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B63CD05-A03E-946A-A8C5-D94A2F333D8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B63CD05-A03E-946A-A8C5-D94A2F333D8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B63CD05-A03E-946A-A8C5-D94A2F333D8A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

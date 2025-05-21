@@ -39,7 +39,7 @@ namespace DobissConnectorService.Dobiss.Utils
         public static byte[] HexToBytes(string hex)
         {
             if (string.IsNullOrEmpty(hex))
-                return Array.Empty<byte>();
+                return [];
 
             int len = hex.Length;
             if (len % 2 != 0)

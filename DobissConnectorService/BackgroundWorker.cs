@@ -1,5 +1,5 @@
 using DobissConnectorService.Consumers.Messages;
-using DobissConnectorService.Dobiss;
+using DobissConnectorService.Dobiss.Interfaces;
 using DobissConnectorService.Dobiss.Models;
 using DobissConnectorService.Services;
 using Microsoft.Extensions.Hosting;
@@ -9,7 +9,7 @@ using SlimMessageBus;
 
 namespace DobissConnectorService
 {
-    public class BackgroundWorker(ILogger<BackgroundWorker> logger, IOptions<DobissSettings> options, IPublishBus publishBus, DobissClientFactory dobissClientFactory, LightCacheService lightCacheService) : BackgroundService
+    public class BackgroundWorker(ILogger<BackgroundWorker> logger, IOptions<DobissSettings> options, IPublishBus publishBus, IDobissClientFactory dobissClientFactory, LightCacheService lightCacheService) : BackgroundService
     {
         public const string topicPath = "homeassistant/light/dobiss_";
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)

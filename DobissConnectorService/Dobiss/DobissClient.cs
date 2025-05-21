@@ -1,27 +1,16 @@
-﻿using DobissConnectorService.Dobiss.Utils;
+﻿using DobissConnectorService.Dobiss.Interfaces;
+using DobissConnectorService.Dobiss.Utils;
 using Microsoft.Extensions.Logging;
 using SuperSimpleTcp;
 using System.Net.Sockets;
 
 namespace DobissConnectorService.Dobiss
 {
-    public class DobissClient(string ip, int port, ILogger logger)
+    public class DobissClient(string ip, int port, ILogger logger) : IDobissClient
     {
-        private const int DefaultMaxLines = 100;
         private const int SocketTimeout = 5000;
 
-        public async Task<byte[]> SendRequest<T>(IDobissRequest<T> request, CancellationToken cancellationToken) where T : class
-        {
-            int maxLines = request.GetMaxOutputLines() == 0 ? DefaultMaxLines : request.GetMaxOutputLines();
-            return await SendRequest(request.GetRequestBytes(), maxLines, cancellationToken);
-        }
-
-        public async Task<byte[]> SendRequest(byte[] parameters, CancellationToken cancellationToken)
-        {
-            return await SendRequest(parameters, DefaultMaxLines, cancellationToken);
-        }
-
-        private async Task<byte[]> SendRequest(byte[] parameters, int maxLines, CancellationToken cancellationToken)
+        public async Task<byte[]> SendRequest(byte[] parameters, int maxLines = 100, CancellationToken cancellationToken = default)
         {
             try
             {

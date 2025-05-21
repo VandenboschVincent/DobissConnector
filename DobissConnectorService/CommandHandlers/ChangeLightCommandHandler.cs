@@ -6,10 +6,11 @@ using Mediator;
 using Microsoft.Extensions.Logging;
 using SlimMessageBus;
 using DobissConnectorService.CommandHandlers.Commands;
+using DobissConnectorService.Dobiss.Interfaces;
 
 namespace DobissConnectorService.CommandHandlers
 {
-    public class ChangeLightCommandHandler(ILogger<ChangeLightCommandHandler> logger, DobissClientFactory dobissClientFactory, LightCacheService lightCacheService, IPublishBus publishBus) : ICommandHandler<ChangeLightCommand>
+    public class ChangeLightCommandHandler(ILogger<ChangeLightCommandHandler> logger, IDobissClientFactory dobissClientFactory, LightCacheService lightCacheService, IPublishBus publishBus) : ICommandHandler<ChangeLightCommand>
     {
         public async ValueTask<Unit> Handle(ChangeLightCommand command, CancellationToken cancellationToken)
         {

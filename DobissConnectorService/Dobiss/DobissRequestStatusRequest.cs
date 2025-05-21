@@ -1,9 +1,10 @@
-﻿using DobissConnectorService.Dobiss.Models;
+﻿using DobissConnectorService.Dobiss.Interfaces;
+using DobissConnectorService.Dobiss.Models;
 using DobissConnectorService.Dobiss.Utils;
 
 namespace DobissConnectorService.Dobiss
 {
-    public class DobissRequestStatusRequest(DobissClient dobissClient, ModuleType type, int module, int? outputs) : IDobissRequest<List<DobissOutput>>
+    public class DobissRequestStatusRequest(IDobissClient dobissClient, ModuleType type, int module, int? outputs) : IDobissRequest<List<DobissOutput>>
     {
         private readonly int MAX_OUTPUTS_PER_MODULE = outputs ?? 12;
         private const byte EMPTY_BYTE = 0xFF;
@@ -59,7 +60,7 @@ namespace DobissConnectorService.Dobiss
 
         private async Task<byte[]> ExecuteInternal(CancellationToken cancellationToken)
         {
-            byte[] result = await dobissClient.SendRequest(this, cancellationToken);
+            byte[] result = await dobissClient.SendRequest(GetRequestBytes(), GetMaxOutputLines(), cancellationToken);
             if (result == null || result.Length == 0)
             {
                 return [];

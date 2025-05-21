@@ -1,11 +1,12 @@
 ﻿
+using DobissConnectorService.Dobiss.Interfaces;
 using DobissConnectorService.Dobiss.Models;
 using DobissConnectorService.Services;
 using Microsoft.Extensions.Logging;
 
 namespace DobissConnectorService.Dobiss
 {
-    public class DobissClientFactory
+    public class DobissClientFactory : IDobissClientFactory
     {
         private DobissService? _instance;
 

@@ -1,9 +1,10 @@
 ﻿using DobissConnectorService.Dobiss.Models;
 using DobissConnectorService.Dobiss;
+using DobissConnectorService.Dobiss.Interfaces;
 
 namespace DobissConnectorService.Services
 {
-    public class DobissService(DobissClient dobissClient, Dictionary<int, ModuleType> moduleTypeMap, LightCacheService lightCacheService)
+    public class DobissService(IDobissClient dobissClient, Dictionary<int, ModuleType> moduleTypeMap, LightCacheService lightCacheService)
     {
         private const int HEX_OUTPUT_STATUS_LENGTH = 2;
 

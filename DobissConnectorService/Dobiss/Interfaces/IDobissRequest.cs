@@ -1,4 +1,4 @@
-﻿namespace DobissConnectorService.Dobiss
+﻿namespace DobissConnectorService.Dobiss.Interfaces
 {
     /// <summary>
     /// Defines a request that can be sent via DobissClient.

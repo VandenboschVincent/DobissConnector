@@ -1,8 +1,9 @@
-﻿using DobissConnectorService.Dobiss.Utils;
+﻿using DobissConnectorService.Dobiss.Interfaces;
+using DobissConnectorService.Dobiss.Utils;
 
 namespace DobissConnectorService.Dobiss
 {
-    public class DobissSendActionRequest(DobissClient client, int module, int address, DobissSendActionRequest.ActionType? actionType = null, int? value = null, int? delayOn = null, int? delayOff = null, int? softDim = null, int? cond = null) : IDobissRequest<object>
+    public class DobissSendActionRequest(IDobissClient client, int module, int address, DobissSendActionRequest.ActionType? actionType = null, int? value = null, int? delayOn = null, int? delayOff = null, int? softDim = null, int? cond = null) : IDobissRequest<object>
     {
         private static readonly byte[] BASE_SEND_ACTION_REQUEST = ConversionUtils.HexToBytes("af02ff000000080108ffffffffffffaf0000000000000000");
 
@@ -32,7 +33,7 @@ namespace DobissConnectorService.Dobiss
             byteArray[INDEX_MODULE_HEADER] = (byte)module;
             byteArray[INDEX_MODULE] = (byte)module;
             byteArray[INDEX_ADDRESS] = (byte)address;
-            byteArray[INDEX_ACTION_TYPE] = actionType?.GetValue() ?? DEFAULT_ACTION_TYPE.GetValue();
+            byteArray[INDEX_ACTION_TYPE] = (byte)(actionType ?? DEFAULT_ACTION_TYPE);
             byteArray[INDEX_DELAY_ON] = (byte)(delayOn ?? DEFAULT_DELAY_ON);
             byteArray[INDEX_VALUE] = (byte)(value ?? DEFAULT_ACTION_VALUE);
             byteArray[INDEX_SOFT_DIM] = (byte)(softDim ?? DEFAULT_SOFT_DIM);
@@ -45,12 +46,12 @@ namespace DobissConnectorService.Dobiss
 
         public async Task<object> Execute(CancellationToken cancellationToken)
         {
-            return await client.SendRequest(this, cancellationToken);
+            return await client.SendRequest(GetRequestBytes(), GetMaxOutputLines(), cancellationToken);
         }
 
         public async Task<string> ExecuteHex(CancellationToken cancellationToken)
         {
-            return (await client.SendRequest(this, cancellationToken)).ToString() ?? string.Empty;
+            return (await client.SendRequest(GetRequestBytes(), GetMaxOutputLines(), cancellationToken)).ToString() ?? string.Empty;
         }
 
         public enum ActionType : byte
@@ -58,15 +59,6 @@ namespace DobissConnectorService.Dobiss
             OFF = 0,
             ON = 1,
             TOGGLE = 2
-        }
-    }
-
-    // Extension method for ActionType to match Java-style .getValue()
-    public static class ActionTypeExtensions
-    {
-        public static byte GetValue(this DobissSendActionRequest.ActionType actionType)
-        {
-            return (byte)actionType;
         }
     }
 }

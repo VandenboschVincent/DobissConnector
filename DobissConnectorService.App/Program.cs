@@ -6,6 +6,7 @@ using DobissConnectorService.Consumers.Messages;
 using DobissConnectorService.Consumers;
 using SlimMessageBus.Host.Serialization.SystemTextJson;
 using SlimMessageBus.Host.Memory;
+using DobissConnectorService.Dobiss.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,7 +20,7 @@ if (builder.Environment.IsDevelopment())
 
 builder.Logging.AddConsole();
 builder.Services.AddMemoryCache();
-builder.Services.AddSingleton<DobissClientFactory>();
+builder.Services.AddSingleton<IDobissClientFactory, DobissClientFactory>();
 builder.Services.AddHostedService<BackgroundWorker>();
 builder.Services.AddTransient<LightCacheService>();
 var dobissConfig = builder.Configuration.GetSection("dobiss");

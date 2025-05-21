@@ -1,4 +1,5 @@
-﻿using DobissConnectorService.Dobiss.Models;
+﻿using DobissConnectorService.Dobiss.Interfaces;
+using DobissConnectorService.Dobiss.Models;
 using DobissConnectorService.Dobiss.Utils;
 using System.Text;
 
@@ -13,11 +14,11 @@ namespace DobissConnectorService.Dobiss
         private static readonly char[] INVALID_CHAR = ['\u0000', '\u0001', '\0', '\u0002', '\u0003', '\uFFFD'];
         private const int OUTPUT_NAME_LENGTH = 32;
 
-        private readonly DobissClient dobissClient;
+        private readonly IDobissClient dobissClient;
         private readonly ModuleType type;
         private readonly int module;
 
-        public DobissFetchOutputsRequest(DobissClient client, ModuleType type, int module)
+        public DobissFetchOutputsRequest(IDobissClient client, ModuleType type, int module)
         {
             this.dobissClient = client;
             this.type = type;
@@ -41,7 +42,7 @@ namespace DobissConnectorService.Dobiss
 
         public async Task<List<DobissGroupData>> Execute(CancellationToken cancellationToken)
         {
-            var dataFound = await dobissClient.SendRequest(this, cancellationToken);
+            var dataFound = await dobissClient.SendRequest(GetRequestBytes(), GetMaxOutputLines(), cancellationToken);
             string groupsString = Encoding.UTF8.GetString(dataFound);
             var groups = new List<DobissGroupData>();
 
@@ -60,7 +61,7 @@ namespace DobissConnectorService.Dobiss
 
         public async Task<string> ExecuteHex(CancellationToken cancellationToken)
         {
-            return ConversionUtils.BytesToHex(await dobissClient.SendRequest(this, cancellationToken));
+            return ConversionUtils.BytesToHex(await dobissClient.SendRequest(GetRequestBytes(), GetMaxOutputLines(), cancellationToken));
         }
     }
 }
