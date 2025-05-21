@@ -35,6 +35,7 @@ namespace DobissConnectorService
                 }
             }
 
+            await Task.Delay(1000, stoppingToken);
             while (!stoppingToken.IsCancellationRequested)
             {
                 await using (await dobissService.DobissClient.Connect(stoppingToken))
@@ -42,8 +43,8 @@ namespace DobissConnectorService
                     logger.LogDebug("Running Dobiss sync");
                     //Fetching status of all lights
                     await FetchStatus(modules, dobissService, stoppingToken);
-                    await Task.Delay(options.Value.Delay, stoppingToken);
                 }
+                await Task.Delay(options.Value.Delay, stoppingToken);
             }
         }
 

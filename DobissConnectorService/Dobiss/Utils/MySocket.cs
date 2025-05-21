@@ -8,7 +8,6 @@ namespace DobissConnectorService.Dobiss.Utils
         public async Task Connect(SemaphoreSlim semaphoreSlim, CancellationToken cancellationToken)
         {
             this.semaphoreSlim = semaphoreSlim;
-            await semaphoreSlim.WaitAsync(cancellationToken);
             await base.ConnectAsync(ip, port, cancellationToken);
         }
 
