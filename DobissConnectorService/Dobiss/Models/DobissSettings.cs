@@ -8,7 +8,6 @@ namespace DobissConnectorService.Dobiss.Models
         [Required]
         public string DobissIp { get; set; } = default!;
         public int DobissPort { get; set; } = 10001!;
-       
     }
 
     public class MqttSettings

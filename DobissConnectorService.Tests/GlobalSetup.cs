@@ -1,8 +1,8 @@
 // Here you could define global logic that would affect all tests
 // You can use attributes at the assembly level to apply to all tests in the assembly
+using DobissConnectorService.Dobiss;
 using DobissConnectorService.Dobiss.Interfaces;
 using DobissConnectorService.Dobiss.Models;
-using DobissConnectorService.Services;
 using Microsoft.Extensions.Caching.Memory;
 using Moq;
 

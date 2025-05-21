@@ -1,9 +1,8 @@
 ﻿using DobissConnectorService.Dobiss.Models;
-using DobissConnectorService.Dobiss;
 using DobissConnectorService.Dobiss.Interfaces;
 using System.Runtime.CompilerServices;
 
-namespace DobissConnectorService.Services
+namespace DobissConnectorService.Dobiss
 {
     public class DobissService(IDobissClient dobissClient, LightCacheService lightCacheService)
     {

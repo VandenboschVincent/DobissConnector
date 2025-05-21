@@ -1,5 +1,4 @@
-﻿using System;
-namespace DobissConnectorService.Dobiss.Models
+﻿namespace DobissConnectorService.Dobiss.Models
 {
     public class Light(int moduleKey, int key, ModuleType moduleType, string name, LightType lightType)
     {

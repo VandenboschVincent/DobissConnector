@@ -1,11 +1,11 @@
 ﻿using DobissConnectorService.Consumers.Messages;
 using DobissConnectorService.Dobiss.Models;
-using DobissConnectorService.Services;
 using Mediator;
 using Microsoft.Extensions.Logging;
 using SlimMessageBus;
 using DobissConnectorService.CommandHandlers.Commands;
 using DobissConnectorService.Dobiss.Interfaces;
+using DobissConnectorService.Dobiss;
 
 namespace DobissConnectorService.CommandHandlers
 {

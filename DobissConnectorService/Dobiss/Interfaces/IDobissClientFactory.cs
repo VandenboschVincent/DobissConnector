@@ -1,6 +1,4 @@
-﻿using DobissConnectorService.Dobiss.Models;
-using DobissConnectorService.Services;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 
 namespace DobissConnectorService.Dobiss.Interfaces
 {

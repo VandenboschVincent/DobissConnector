@@ -1,7 +1,7 @@
 using DobissConnectorService.Consumers.Messages;
+using DobissConnectorService.Dobiss;
 using DobissConnectorService.Dobiss.Interfaces;
 using DobissConnectorService.Dobiss.Models;
-using DobissConnectorService.Services;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
