@@ -20,22 +20,21 @@ namespace DobissConnectorService
             List<DobissModule> modules = [];
             await using (await dobissService.DobissClient.Connect(stoppingToken))
             {
-
                 //Fetching all modules
                 modules = await FetchModules(dobissService, stoppingToken);
                 logger.LogInformation("Modules found: {@Modules}", modules);
 
                 //Fetching all lights
                 await FetchLights(modules, dobissService, stoppingToken);
+            }
 
-                //Sending config for all lights
-                await SendConfig(stoppingToken);
+            //Sending config for all lights
+            await SendConfig(stoppingToken);
 
-                //Stop syncing when no delay is set
-                if (options.Value.Delay <= 0)
-                {
-                    return;
-                }
+            //Stop syncing when no delay is set
+            if (options.Value.Delay <= 0)
+            {
+                return;
             }
 
             int i = 0;
@@ -43,10 +42,10 @@ namespace DobissConnectorService
             while (!stoppingToken.IsCancellationRequested)
             {
                 i++;
+                logger.LogDebug("Running Dobiss sync {Counter}", i);
+                //Fetching status of all lights
                 await using (await dobissService.DobissClient.Connect(stoppingToken))
                 {
-                    logger.LogDebug("Running Dobiss sync {Counter}", i);
-                    //Fetching status of all lights
                     await FetchStatus(modules, dobissService, stoppingToken);
                 }
                 if (i % 50 == 0)
@@ -88,6 +87,7 @@ namespace DobissConnectorService
                         ? new DimLightConfigMessage(light.Name, light.ModuleKey, light.Key)
                         : new LightConfigMessage(light.Name, light.ModuleKey, light.Key), $"{topicPath}{light.ModuleKey}x{light.Key}/config", null, cancellationToken);
             }
+            logger.LogInformation("Config resend for all lights");
         }
 
         private async Task FetchStatus(List<DobissModule> modules, DobissService dobissService, CancellationToken cancellationToken)
