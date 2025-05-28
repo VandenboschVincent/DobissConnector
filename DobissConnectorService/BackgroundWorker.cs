@@ -9,42 +9,51 @@ using SlimMessageBus;
 
 namespace DobissConnectorService
 {
-    public class BackgroundWorker(ILogger<BackgroundWorker> logger, IOptions<DobissSettings> options, IPublishBus publishBus, IDobissClientFactory dobissClientFactory, LightCacheService lightCacheService) : BackgroundService
+    public class BackgroundWorker(ILogger<BackgroundWorker> logger, IOptionsMonitor<DobissSettings> options, IPublishBus publishBus, IDobissClientFactory dobissClientFactory, LightCacheService lightCacheService) : BackgroundService
     {
         public const string topicPath = "homeassistant/light/dobiss_";
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            logger.LogDebug("Starting worker with config: {@Config}", options.Value);
+            logger.LogDebug("Starting worker with config: {@Config}", options.CurrentValue);
 
-            DobissService dobissService = dobissClientFactory.Create(options.Value.DobissIp, options.Value.DobissPort, logger, lightCacheService);
+            DobissService dobissService = dobissClientFactory.Create(options.CurrentValue.DobissIp, options.CurrentValue.DobissPort, logger, lightCacheService);
             List<DobissModule> modules = [];
             await using (await dobissService.DobissClient.Connect(stoppingToken))
             {
-
                 //Fetching all modules
                 modules = await FetchModules(dobissService, stoppingToken);
                 logger.LogInformation("Modules found: {@Modules}", modules);
 
                 //Fetching all lights
                 await FetchLights(modules, dobissService, stoppingToken);
-
-                //Stop syncing when no delay is set
-                if (options.Value.Delay <= 0)
-                {
-                    return;
-                }
             }
 
+            //Sending config for all lights
+            await SendConfig(stoppingToken);
+
+            //Stop syncing when no delay is set
+            if (options.CurrentValue.Delay <= 0)
+            {
+                return;
+            }
+
+            int i = 0;
             await Task.Delay(1000, stoppingToken);
             while (!stoppingToken.IsCancellationRequested)
             {
+                i++;
+                logger.LogDebug("Running Dobiss sync {Counter}", i);
+                //Fetching status of all lights
                 await using (await dobissService.DobissClient.Connect(stoppingToken))
                 {
-                    logger.LogDebug("Running Dobiss sync");
-                    //Fetching status of all lights
                     await FetchStatus(modules, dobissService, stoppingToken);
                 }
-                await Task.Delay(options.Value.Delay, stoppingToken);
+                if (options.CurrentValue.ResendConfigInterval > 0 && i % options.CurrentValue.ResendConfigInterval == 0)
+                {
+                    //Resend config every 50 iterations
+                    await SendConfig(stoppingToken);
+                }
+                await Task.Delay(options.CurrentValue.Delay, stoppingToken);
             }
         }
 
@@ -64,12 +73,21 @@ namespace DobissConnectorService
                 {
                     logger.LogInformation("Found light {Light} {Module}:{ModuleId} with address {Address} and type {Type}", light.Name, light.Index, module.Type, module.Index, light.Type);
                     lightCacheService.Add(new Light(module.Index, light.Index, module.Type, light.Name, light.Type));
-                    await publishBus.Publish(
-                        module.Type == ModuleType.DIMMER
-                            ? new DimLightConfigMessage(light.Name, module.Index, light.Index)
-                            : new LightConfigMessage(light.Name, module.Index, light.Index), $"{topicPath}{module.Index}x{light.Index}/config", null, cancellationToken);
                 }
             }
+        }
+
+        private async Task SendConfig(CancellationToken cancellationToken)
+        {
+            var lights = lightCacheService.GetAll();
+            foreach (Light light in lights)
+            {
+                await publishBus.Publish(
+                    light.ModuleType == ModuleType.DIMMER
+                        ? new DimLightConfigMessage(light.Name, light.ModuleKey, light.Key)
+                        : new LightConfigMessage(light.Name, light.ModuleKey, light.Key), $"{topicPath}{light.ModuleKey}x{light.Key}/config", null, cancellationToken);
+            }
+            logger.LogInformation("Config resend for all lights");
         }
 
         private async Task FetchStatus(List<DobissModule> modules, DobissService dobissService, CancellationToken cancellationToken)

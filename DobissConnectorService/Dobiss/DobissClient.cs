@@ -14,7 +14,7 @@ namespace DobissConnectorService.Dobiss
 
         public async ValueTask<IAsyncDisposable> Connect(CancellationToken cancellationToken)
         {
-            await semaphoreSlim.WaitAsync(cancellationToken);
+            await semaphoreSlim.WaitAsync(TimeSpan.FromSeconds(5), cancellationToken);
             _socket = new MySocket(host, port)
             {
                 SendTimeout = SocketTimeout,
