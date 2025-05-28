@@ -9,14 +9,14 @@ using SlimMessageBus;
 
 namespace DobissConnectorService
 {
-    public class BackgroundWorker(ILogger<BackgroundWorker> logger, IOptions<DobissSettings> options, IPublishBus publishBus, IDobissClientFactory dobissClientFactory, LightCacheService lightCacheService) : BackgroundService
+    public class BackgroundWorker(ILogger<BackgroundWorker> logger, IOptionsMonitor<DobissSettings> options, IPublishBus publishBus, IDobissClientFactory dobissClientFactory, LightCacheService lightCacheService) : BackgroundService
     {
         public const string topicPath = "homeassistant/light/dobiss_";
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            logger.LogDebug("Starting worker with config: {@Config}", options.Value);
+            logger.LogDebug("Starting worker with config: {@Config}", options.CurrentValue);
 
-            DobissService dobissService = dobissClientFactory.Create(options.Value.DobissIp, options.Value.DobissPort, logger, lightCacheService);
+            DobissService dobissService = dobissClientFactory.Create(options.CurrentValue.DobissIp, options.CurrentValue.DobissPort, logger, lightCacheService);
             List<DobissModule> modules = [];
             await using (await dobissService.DobissClient.Connect(stoppingToken))
             {
@@ -32,7 +32,7 @@ namespace DobissConnectorService
             await SendConfig(stoppingToken);
 
             //Stop syncing when no delay is set
-            if (options.Value.Delay <= 0)
+            if (options.CurrentValue.Delay <= 0)
             {
                 return;
             }
@@ -48,12 +48,12 @@ namespace DobissConnectorService
                 {
                     await FetchStatus(modules, dobissService, stoppingToken);
                 }
-                if (i % 50 == 0)
+                if (options.CurrentValue.ResendConfigInterval > 0 && i % options.CurrentValue.ResendConfigInterval == 0)
                 {
                     //Resend config every 50 iterations
                     await SendConfig(stoppingToken);
                 }
-                await Task.Delay(options.Value.Delay, stoppingToken);
+                await Task.Delay(options.CurrentValue.Delay, stoppingToken);
             }
         }
 

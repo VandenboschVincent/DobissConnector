@@ -5,6 +5,7 @@ namespace DobissConnectorService.Dobiss.Models
     public class DobissSettings
     {
         public int Delay { get; set; } = 5000;
+        public int ResendConfigInterval { get; set; } = 50;
         [Required]
         public string DobissIp { get; set; } = default!;
         public int DobissPort { get; set; } = 10001!;
