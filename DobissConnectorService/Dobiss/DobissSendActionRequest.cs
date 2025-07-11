@@ -15,7 +15,7 @@ namespace DobissConnectorService.Dobiss
         {
             await client.SendRequest(GetRequestBytes(), GetMaxOutputLines(), cancellationToken);
 
-            byte[] requestData = [(byte)moduleIndex, (byte)outputIndex, (byte)actionType, (byte)delayOn, (byte)delayOff, (byte)value, (byte)softDim, (byte)red]; 
+            byte[] requestData = [(byte)moduleIndex, (byte)outputIndex, (byte)actionType, (byte)delayOn, (byte)delayOff, (byte)value, (byte)softDim, (byte)red];
             await client.SendRequest(requestData, GetMaxOutputLines(), cancellationToken);
             return true;
         }

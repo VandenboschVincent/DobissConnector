@@ -9,7 +9,7 @@ using DobissConnectorService.Dobiss;
 
 namespace DobissConnectorService.CommandHandlers
 {
-    public class ChangeLightCommandHandler(ILogger<ChangeLightCommandHandler> logger, IDobissClientFactory dobissClientFactory, LightCacheService lightCacheService, IPublishBus publishBus) : ICommandHandler<ChangeLightCommand>
+    public class ChangeLightCommandHandler(ILogger<ChangeLightCommandHandler> logger, IDobissClientFactory dobissClientFactory, ILightCacheService lightCacheService, IPublishBus publishBus) : ICommandHandler<ChangeLightCommand>
     {
         public async ValueTask<Unit> Handle(ChangeLightCommand command, CancellationToken cancellationToken)
         {
@@ -34,7 +34,7 @@ namespace DobissConnectorService.CommandHandlers
                     await service.DimOutput(light.ModuleKey, light.Key, command.NewState.Value, cancellationToken);
                 }
                 light.CurrentValue = command.NewState.Value;
-                lightCacheService.Update(light);
+                await lightCacheService.Update(light);
                 logger.LogInformation("Light {LightName} set to {State}", light.Name, command.NewState);
             }
             else

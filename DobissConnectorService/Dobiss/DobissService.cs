@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace DobissConnectorService.Dobiss
 {
-    public class DobissService(IDobissClient dobissClient, LightCacheService lightCacheService)
+    public class DobissService(IDobissClient dobissClient, ILightCacheService lightCacheService)
     {
         public IDobissClient DobissClient => dobissClient;
 
@@ -42,7 +42,8 @@ namespace DobissConnectorService.Dobiss
 
         public async Task<List<(int index, int value)>> RequestStatus(DobissModule module, CancellationToken cancellationToken = default)
         {
-            return await new DobissRequestStatusRequest(dobissClient, module.Type, module.Index, lightCacheService.GetAll().Count(t => t.ModuleKey == module.Index))
+            var lights = await lightCacheService.GetAll();
+            return await new DobissRequestStatusRequest(dobissClient, module.Type, module.Index, lights.Count(t => t.ModuleKey == module.Index))
                 .Execute(cancellationToken);
         }
 

@@ -6,11 +6,11 @@ namespace DobissConnectorService.Dobiss
     public class DobissClientFactory : IDobissClientFactory
     {
         private DobissService? _instance;
-        public DobissService Create(string ip, int port, ILogger logger, LightCacheService lightCacheService)
+        public DobissService Create(string ip, int port, ILogger logger, ILightCacheService lightCacheService)
         {
             return _instance ??= CreateInstance(ip, port, logger, lightCacheService);
         }
-        private DobissService CreateInstance(string ip, int port, ILogger logger, LightCacheService lightCacheService)
+        private DobissService CreateInstance(string ip, int port, ILogger logger, ILightCacheService lightCacheService)
         {
             DobissClient client = new(ip, port, logger);
             DobissService service = new(client, lightCacheService);
