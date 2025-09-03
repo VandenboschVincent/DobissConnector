@@ -9,7 +9,7 @@ using SlimMessageBus;
 
 namespace DobissConnectorService
 {
-    public class BackgroundWorker(ILogger<BackgroundWorker> logger, IOptionsMonitor<DobissSettings> options, IPublishBus publishBus, IDobissClientFactory dobissClientFactory, LightCacheService lightCacheService) : BackgroundService
+    public class BackgroundWorker(ILogger<BackgroundWorker> logger, IOptionsMonitor<DobissSettings> options, IPublishBus publishBus, IDobissClientFactory dobissClientFactory, ILightCacheService lightCacheService) : BackgroundService
     {
         public const string topicPath = "homeassistant/light/dobiss_";
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -21,7 +21,7 @@ namespace DobissConnectorService
             await using (await dobissService.DobissClient.Connect(stoppingToken))
             {
                 //Fetching all modules
-                modules = await FetchModules(dobissService, stoppingToken);
+                modules = await dobissService.FetchModules(stoppingToken);
                 logger.LogInformation("Modules found: {@Modules}", modules);
 
                 //Fetching all lights
@@ -57,11 +57,6 @@ namespace DobissConnectorService
             }
         }
 
-        private static async Task<List<DobissModule>> FetchModules(DobissService dobissService, CancellationToken cancellationToken)
-        {
-            return await dobissService.FetchModules(cancellationToken);
-        }
-
         private async Task FetchLights(List<DobissModule> modules, DobissService dobissService, CancellationToken cancellationToken)
         {
             foreach (DobissModule module in modules)
@@ -69,23 +64,24 @@ namespace DobissConnectorService
                 logger.LogDebug("Fetching data for module {Module} with type {Type}", module.Index, module.Type);
                 List<DobissOutput> outputData = await dobissService.FetchOutputsData(module, cancellationToken);
                 logger.LogDebug("Module {Module} found with data {@Data}", module.Index, outputData);
-                foreach(DobissOutput light in outputData)
+                foreach (DobissOutput light in outputData)
                 {
                     logger.LogInformation("Found light {Light} {Module}:{ModuleId} with address {Address} and type {Type}", light.Name, light.Index, module.Type, module.Index, light.Type);
-                    lightCacheService.Add(new Light(module.Index, light.Index, module.Type, light.Name, light.Type));
+                    await lightCacheService.Add(new Light(module.Index, light.Index, module.Type, light.Name, light.Type));
                 }
             }
         }
 
         private async Task SendConfig(CancellationToken cancellationToken)
         {
-            var lights = lightCacheService.GetAll();
+            var lights = await lightCacheService.GetAll();
             foreach (Light light in lights)
             {
                 await publishBus.Publish(
                     light.ModuleType == ModuleType.DIMMER
-                        ? new DimLightConfigMessage(light.Name, light.ModuleKey, light.Key)
-                        : new LightConfigMessage(light.Name, light.ModuleKey, light.Key), $"{topicPath}{light.ModuleKey}x{light.Key}/config", null, cancellationToken);
+                        ? new DimLightConfigMessage(light.Name, light.ModuleKey, light.Key, options.CurrentValue.DeviceName)
+                        : new LightConfigMessage(light.Name, light.ModuleKey, light.Key, options.CurrentValue.DeviceName)
+                        , $"{topicPath}{light.ModuleKey}x{light.Key}/config", null, cancellationToken);
             }
             logger.LogInformation("Config resend for all lights");
         }
@@ -95,7 +91,7 @@ namespace DobissConnectorService
             var moduleStatuses = await dobissService.RequestAllStatus(modules, cancellationToken).ToListAsync(cancellationToken);
             foreach (var (moduleIndex, index, value) in moduleStatuses)
             {
-                Light? light = lightCacheService.Get(moduleIndex, index);
+                Light? light = await lightCacheService.Get(moduleIndex, index);
                 if (light is null)
                 {
                     logger.LogWarning("No group data found for module {Module} with address {Address}", moduleIndex, index);
@@ -106,7 +102,7 @@ namespace DobissConnectorService
                 if (light.CurrentValue != outputStatus)
                 {
                     light.CurrentValue = outputStatus;
-                    lightCacheService.Update(light);
+                    await lightCacheService.Update(light);
                     logger.LogInformation("Light {Light} has changed to {Status}", light.Name, outputStatus);
                 }
                 if (outputStatus == 0 || outputStatus == 100)

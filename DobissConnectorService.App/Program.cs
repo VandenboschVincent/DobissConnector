@@ -22,7 +22,7 @@ builder.Logging.AddConsole();
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<IDobissClientFactory, DobissClientFactory>();
 builder.Services.AddHostedService<BackgroundWorker>();
-builder.Services.AddTransient<LightCacheService>();
+builder.Services.AddTransient<ILightCacheService, LightCacheService>();
 var dobissConfig = builder.Configuration.GetSection("dobiss");
 var mqttConfig = builder.Configuration.GetSection("mqtt");
 builder.Services.Configure<DobissSettings>(dobissConfig);

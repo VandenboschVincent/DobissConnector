@@ -1,9 +1,10 @@
-﻿using DobissConnectorService.Dobiss.Models;
+﻿using DobissConnectorService.Dobiss.Interfaces;
+using DobissConnectorService.Dobiss.Models;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace DobissConnectorService
 {
-    public class LightCacheService
+    public class LightCacheService : ILightCacheService
     {
         private readonly IMemoryCache _cache;
         private const string CacheKey = "LightCache";
@@ -11,11 +12,6 @@ namespace DobissConnectorService
         public LightCacheService(IMemoryCache cache)
         {
             _cache = cache;
-            // Initialize the cache with an empty dictionary if not already present
-            if (!_cache.TryGetValue(CacheKey, out Dictionary<string, Light>? _))
-            {
-                _cache.Set(CacheKey, new Dictionary<string, Light>());
-            }
         }
 
         private static string GetKey(int module, int key)
@@ -23,21 +19,26 @@ namespace DobissConnectorService
             return $"{module}x{key}";
         }
 
-        public IEnumerable<Light> GetAll()
+        private async Task<Dictionary<string, Light>?> GetOrCreate()
         {
-            var lights = _cache.Get<Dictionary<string, Light>>(CacheKey);
+            return await _cache.GetOrCreateAsync(CacheKey, (entry) => Task.FromResult(new Dictionary<string, Light>()));
+        }
+
+        public async Task<IEnumerable<Light>> GetAll()
+        {
+            var lights = await GetOrCreate();
             return lights?.Values ?? Enumerable.Empty<Light>();
         }
 
-        public Light? Get(int module, int key)
+        public async Task<Light?> Get(int module, int key)
         {
-            var lights = _cache.Get<Dictionary<string, Light>>(CacheKey);
+            var lights = await GetOrCreate();
             return lights != null && lights.TryGetValue(GetKey(module, key), out var light) ? light : null;
         }
 
-        public void Add(Light light)
+        public async Task Add(Light light)
         {
-            var lights = _cache.Get<Dictionary<string, Light>>(CacheKey);
+            var lights = await GetOrCreate();
             string key = GetKey(light.ModuleKey, light.Key);
             if (lights != null && !lights.ContainsKey(key))
             {
@@ -46,9 +47,9 @@ namespace DobissConnectorService
             }
         }
 
-        public void Update(Light light)
+        public async Task Update(Light light)
         {
-            var lights = _cache.Get<Dictionary<string, Light>>(CacheKey);
+            var lights = await GetOrCreate();
             string key = GetKey(light.ModuleKey, light.Key);
             if (lights != null && lights.ContainsKey(key))
             {

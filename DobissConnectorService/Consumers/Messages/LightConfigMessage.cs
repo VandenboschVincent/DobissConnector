@@ -4,22 +4,20 @@ namespace DobissConnectorService.Consumers.Messages
 {
     public class Device
     {
-        public Device(string name, int module, int id)
+        public Device(string name)
         {
-            identifiers = [$"dobiss_{module}x{id}"];
+            identifiers = [$"dobiss_{name}"];
             manufacturer = "Dobiss";
             this.name = name;
-            via_device = $"dobiss";
         }
         public List<string> identifiers { get; set; }
         public string manufacturer { get; set; }
         public string name { get; set; }
-        public string via_device { get; set; }
     }
 
     public class DimLightConfigMessage : LightConfigMessage
     {
-        public DimLightConfigMessage(string name, int module, int id) : base(name, module, id)
+        public DimLightConfigMessage(string name, int module, int id, string deviceName) : base(name, module, id, deviceName)
         {
             brightness = true;
             brightness_scale = 100;
@@ -38,11 +36,11 @@ namespace DobissConnectorService.Consumers.Messages
 
     public class LightConfigMessage
     {
-        public LightConfigMessage(string name, int module, int id)
+        public LightConfigMessage(string name, int module, int id, string deviceName)
         {
             unique_id = $"dobiss_{module}x{id}".ToLower();
             command_topic = $"homeassistant/light/set/{unique_id}";
-            device = new Device(name, module, id);
+            device = new Device(deviceName);
             this.name = name;
             optimistic = false;
             schema = "json";

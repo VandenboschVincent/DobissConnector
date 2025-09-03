@@ -12,13 +12,13 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.4" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
-    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.7" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.7" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1" />
     <PackageReference Include="SlimMessageBus" Version="3.0.0" />
-    <PackageReference Include="SlimMessageBus.Host.Memory" Version="3.1.1" />
-    <PackageReference Include="SlimMessageBus.Host.Mqtt" Version="3.1.1" />
-    <PackageReference Include="SlimMessageBus.Host.Serialization.SystemTextJson" Version="3.1.1" />
-    <PackageReference Include="System.Linq.Async" Version="6.0.1" />
+    <PackageReference Include="SlimMessageBus.Host.Memory" Version="3.2.0" />
+    <PackageReference Include="SlimMessageBus.Host.Mqtt" Version="3.2.0" />
+    <PackageReference Include="SlimMessageBus.Host.Serialization.SystemTextJson" Version="3.2.0" />
+    <PackageReference Include="System.Linq.Async" Version="6.0.3" />
   </ItemGroup>
 </Project>
