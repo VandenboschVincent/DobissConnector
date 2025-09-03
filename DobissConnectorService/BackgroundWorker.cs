@@ -64,7 +64,7 @@ namespace DobissConnectorService
                 logger.LogDebug("Fetching data for module {Module} with type {Type}", module.Index, module.Type);
                 List<DobissOutput> outputData = await dobissService.FetchOutputsData(module, cancellationToken);
                 logger.LogDebug("Module {Module} found with data {@Data}", module.Index, outputData);
-                foreach(DobissOutput light in outputData)
+                foreach (DobissOutput light in outputData)
                 {
                     logger.LogInformation("Found light {Light} {Module}:{ModuleId} with address {Address} and type {Type}", light.Name, light.Index, module.Type, module.Index, light.Type);
                     await lightCacheService.Add(new Light(module.Index, light.Index, module.Type, light.Name, light.Type));
@@ -79,8 +79,9 @@ namespace DobissConnectorService
             {
                 await publishBus.Publish(
                     light.ModuleType == ModuleType.DIMMER
-                        ? new DimLightConfigMessage(light.Name, light.ModuleKey, light.Key)
-                        : new LightConfigMessage(light.Name, light.ModuleKey, light.Key), $"{topicPath}{light.ModuleKey}x{light.Key}/config", null, cancellationToken);
+                        ? new DimLightConfigMessage(light.Name, light.ModuleKey, light.Key, options.CurrentValue.DeviceName)
+                        : new LightConfigMessage(light.Name, light.ModuleKey, light.Key, options.CurrentValue.DeviceName)
+                        , $"{topicPath}{light.ModuleKey}x{light.Key}/config", null, cancellationToken);
             }
             logger.LogInformation("Config resend for all lights");
         }
