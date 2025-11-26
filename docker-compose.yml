@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+  dobiss-connector:
+    image: vandenboschvincent/dobissconnectorserviceapp
+    container_name: dobiss-connector
+
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+
+    environment:
+      mqtt__ip: "192.168.1.34"              # MQTT broker IP address
+      mqtt__Port: "1883"                    # MQTT broker port
+      mqtt__User: ""                        # MQTT username (leave empty if no auth)
+      mqtt__Password: ""                    # MQTT password (leave empty if no auth)
+      dobiss__Delay: "5000"                 # Loop delay or poll interval (ms)
+      dobiss__DobissIp: "192.168.1.153"     # Dobiss controller IP address
+      dobiss__DobissPort: "10001"           # Dobiss controller port
+      dobiss__ResendConfigInterval: "50"    # Interval for sending configuration updates
+      dobiss__DeviceName: "Lights"          # Device label used by the service
+
+    restart: unless-stopped

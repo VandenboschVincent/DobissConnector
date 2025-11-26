@@ -18,7 +18,7 @@ A lightweight .NET bridge for connecting a **Dobiss light control system** to an
 
 ## ⚙️ Configuration
 
-Configuration is provided through `appsettings.json`. Below is a sample:
+Configuration is provided through `appsettings.json` (or use docker env variables see Docker). Below is a sample:
 
 ```json
 {
@@ -71,7 +71,7 @@ The REST API is available if enabled in your environment and provides endpoints 
 
 ---
 
-## ▶️ Usage
+## ▶️ Usage for dev
 
 1. **Clone the repository**
 
@@ -92,16 +92,21 @@ To run using Docker: https://hub.docker.com/r/vandenboschvincent/dobissconnector
 ```bash
 docker run -d \
   --name dobiss-connector \
-  -v /path/to/your/appsettings.json:/app/appsettings.json \
   -p 8080:8080 \
   -p 8081:8081 \
+  -e mqtt__ip='192.168.1.34' \
+  -e mqtt__Port='1883' \
+  -e mqtt__User='' \
+  -e mqtt__Password='' \
+  -e dobiss__Delay='5000' \
+  -e dobiss__DobissIp='192.168.1.153' \
+  -e dobiss__DobissPort='10001' \
+  -e dobiss__ResendConfigInterval='50' \
+  -e dobiss__DeviceName='Lights' \
   vandenboschvincent/dobissconnectorserviceapp
 ```
 
-* Replace `/path/to/your/appsettings.json` with the full path to your local config.
-* Ensure port `8080` (or any mapped port) is exposed if you plan to access the API.
-* 8081 is https
-
+Or use the docker-compose.yml example
 
 ---
 
