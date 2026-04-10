@@ -2,14 +2,14 @@ using DobissConnectorService.Consumers.Messages;
 using DobissConnectorService.Dobiss;
 using DobissConnectorService.Dobiss.Interfaces;
 using DobissConnectorService.Dobiss.Models;
+using Mediator;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using SlimMessageBus;
 
 namespace DobissConnectorService
 {
-    public class BackgroundWorker(ILogger<BackgroundWorker> logger, IOptionsMonitor<DobissSettings> options, IPublishBus publishBus, IDobissClientFactory dobissClientFactory, ILightCacheService lightCacheService) : BackgroundService
+    public class BackgroundWorker(ILogger<BackgroundWorker> logger, IOptionsMonitor<DobissSettings> options, IDobissClientFactory dobissClientFactory, ILightCacheService lightCacheService, IMediator mediator) : BackgroundService
     {
         public const string topicPath = "homeassistant/light/dobiss_";
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -47,11 +47,6 @@ namespace DobissConnectorService
                 await using (await dobissService.DobissClient.Connect(stoppingToken))
                 {
                     await FetchStatus(modules, dobissService, stoppingToken);
-                }
-                if (options.CurrentValue.ResendConfigInterval > 0 && i % options.CurrentValue.ResendConfigInterval == 0)
-                {
-                    //Resend config every 50 iterations
-                    await SendConfig(stoppingToken);
                 }
                 await Task.Delay(options.CurrentValue.Delay, stoppingToken);
             }
@@ -104,11 +99,15 @@ namespace DobissConnectorService
                     light.CurrentValue = outputStatus;
                     await lightCacheService.Update(light);
                     logger.LogInformation("Light {Light} has changed to {Status}", light.Name, outputStatus);
+                    if (outputStatus == 0 || outputStatus == 100)
+                        await publishBus.Publish(new LightChangedMessage(outputStatus == 100 ? "ON" : "OFF", null), $"{topicPath}{light.ModuleKey}x{light.Key}/state", null, cancellationToken);
+                    else
+                        await publishBus.Publish(new LightChangedMessage("ON", outputStatus), $"{topicPath}{light.ModuleKey}x{light.Key}/state", null, cancellationToken);
                 }
-                if (outputStatus == 0 || outputStatus == 100)
-                    await publishBus.Publish(new LightChangedMessage(outputStatus == 100 ? "ON" : "OFF", null), $"{topicPath}{light.ModuleKey}x{light.Key}/state", null, cancellationToken);
                 else
-                    await publishBus.Publish(new LightChangedMessage("ON", outputStatus), $"{topicPath}{light.ModuleKey}x{light.Key}/state", null, cancellationToken);
+                {
+                    logger.LogDebug("Light {Light} has no change with status {Status}", light.Name, outputStatus);
+                }
             }
         }
     }

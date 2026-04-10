@@ -4,17 +4,15 @@ using DobissConnectorService.Dobiss.Interfaces;
 using DobissConnectorService.Dobiss.Models;
 using Mediator;
 using Microsoft.Extensions.Logging;
-using SlimMessageBus;
 using System.Text.RegularExpressions;
 
 namespace DobissConnectorService.Consumers
 {
-    public partial class LightChangedConsumer(ILogger<LightChangedConsumer> logger, ILightCacheService lightCacheService, IMediator mediator) : IConsumer<IConsumerContext<ChangeLigthMessage>>
+    public partial class LightChangedConsumer(ILogger<LightChangedConsumer> logger, ILightCacheService lightCacheService, IMediator mediator)
     {
-        public async Task OnHandle(IConsumerContext<ChangeLigthMessage> message, CancellationToken cancellationToken)
+        public async Task OnHandle(ChangeLigthMessage message, string path, CancellationToken cancellationToken)
         {
             logger.LogDebug("Handle message {@ChangeLigthMessage}", message);
-            string? path = message.Headers["origPath"].ToString();
             if (string.IsNullOrEmpty(path))
             {
                 throw new ArgumentException("Path is null or empty");
@@ -26,7 +24,7 @@ namespace DobissConnectorService.Consumers
 
             Light? light = await lightCacheService.Get(module, device)
                 ?? throw new ArgumentException($"Light with module {module} and device {device} not found");
-            await mediator.Send(new ChangeLightCommand(light, message.Message.Brightness ?? StateToInt(message.Message.State)), cancellationToken);
+            await mediator.Send(new ChangeLightCommand(light, message.Brightness ?? StateToInt(message.State)), cancellationToken);
         }
 
         private static int StateToInt(string state)
